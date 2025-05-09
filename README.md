@@ -10,6 +10,7 @@ Three.js shape loaders for GeoJSON and WKT formats.
 
 **spec**
 - https://github.com/stevage/geojson-spec
+  - https://stevage.github.io/geojson-spec/
 - https://en.wikipedia.org/wiki/GeoJSON
 - https://geojson.org/
 
