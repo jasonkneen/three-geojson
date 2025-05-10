@@ -9,14 +9,96 @@ Three.js shape loaders for [GeoJSON](https://geojson.org/) and [WKT](https://en.
 # Use
 
 ```js
-TODO
+// load the content
+const result = await new GeoJSON().loadAsync( url );
+
+// extract polygon lines and project them onto the globe
+const transformer = new GeoJSONTransformer();
+result.polygons.forEach( polygon => {
+
+  const line = polygon.getLineObject();
+  transformer.transformGeometry( line.geometry );
+  scene.add( line );
+
+} );
 ```
 
 # API
 
 ## GeoJSONResult
 
-TODO
+```js
+{
+  // list of features in the file
+  features: Array<Feature>,
+
+  // list of all geometries in the file
+  geometries: Array<Polygon|LineString|Points>,
+
+  // list of specific geometry types
+  polygons: Array<Polygon|LineString|Points>,
+  lineStrings: Array<Polygon|LineString|Points>,
+  points: Array<Polygon|LineString|Points>,
+}
+```
+
+**Feature**
+
+Definition of a feature that includes properties originally defined in the GeoJSON file.
+
+```js
+{
+  type: 'Feature',
+  id: string | null,
+  properties: object,
+  geometries: Array<Polygon|LineString|Points>,
+}
+```
+
+**Points**
+
+Definition of a parsed set of point geometry.
+
+```js
+{
+  type: string,
+  feature: Feature,
+  data: Vector3 | Array<Vector3>,
+}
+```
+
+**LineString**
+
+Definition of a parsed set of line string geometry.
+
+```js
+{
+  type: string,
+  feature: Feature,
+
+  // function for building three.js LineSegments from the line data
+  getLineObject(): LineSegments,
+}
+```
+
+**Polygon**
+
+Definition of a parsed set of polygon geometry.
+
+```js
+{
+  type: string,
+  feature: Feature,
+
+  // functions for building three.js LineSegments and Mesh from the line data
+  getLineObject(): LineSegments,
+  getMeshObject( options: {
+    thickness: number,
+    offset: number,
+    generateNormals: boolean,
+  } ): Mesh,
+}
+```
 
 ## GeoJSONLoader
 
