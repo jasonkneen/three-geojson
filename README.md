@@ -31,7 +31,7 @@ result.polygons.forEach( polygon => {
 
 ## GeoJSONResult
 
-```js
+```ts
 {
   // list of features in the file
   features: Array<Feature>,
@@ -50,7 +50,7 @@ result.polygons.forEach( polygon => {
 
 Definition of a feature that includes properties originally defined in the GeoJSON file.
 
-```js
+```ts
 {
   type: 'Feature',
   id: string | null,
@@ -70,7 +70,7 @@ Definition of a feature that includes properties originally defined in the GeoJS
 
 Definition of a parsed set of point geometry.
 
-```js
+```ts
 {
   type: string,
   feature: Feature,
@@ -82,7 +82,7 @@ Definition of a parsed set of point geometry.
 
 Definition of a parsed set of line string geometry.
 
-```js
+```ts
 {
   type: string,
   feature: Feature,
@@ -96,7 +96,7 @@ Definition of a parsed set of line string geometry.
 
 Definition of a parsed set of polygon geometry.
 
-```js
+```ts
 {
   type: string,
   feature: Feature,
