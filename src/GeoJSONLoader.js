@@ -82,6 +82,33 @@ function traverse( object, callback ) {
 
 }
 
+class Polygon {
+
+	constructor( shape, holes ) {
+
+		// TODO: clean up lines / shapes (handle 3d?), then triangulate
+		// TODO: add helper for extrusion
+
+		this.isPolygon = true;
+		this.shape = shape;
+		this.holes = holes;
+		this.triangulation = null;
+
+	}
+
+}
+
+class Line {
+
+	constructor( vertices ) {
+
+		this.isLine = true;
+		this.vertices = vertices;
+
+	}
+
+}
+
 export class GeoJSONLoader {
 
 	constructor() {
@@ -108,7 +135,7 @@ export class GeoJSONLoader {
 
 		}
 
-		const root = parseObject.call( this, json );
+		const root = this.parseObject( json );
 		const features = {};
 		const geometries = {};
 
@@ -159,7 +186,7 @@ export class GeoJSONLoader {
 
 				return {
 					...getBase( object ),
-					data: parseCoordinateArray( object.coordinates ),
+					data: new Line( parseCoordinateArray( object.coordinates ) ),
 				};
 
 			}
@@ -168,16 +195,17 @@ export class GeoJSONLoader {
 
 				return {
 					...getBase( object ),
-					data: object.coordinates.map( arr => parseCoordinateArray( arr ) ),
+					data: object.coordinates.map( arr => new Line( parseCoordinateArray( arr ) ) ),
 				};
 
 			}
 
 			case 'Polygon': {
 
+				const [ shape, holes ] = parsePolygon( object.coordinates );
 				return {
 					...getBase( object ),
-					data: parsePolygon( object.coordinates ),
+					data: new Polygon( shape, holes ),
 				};
 
 			}
@@ -186,7 +214,12 @@ export class GeoJSONLoader {
 
 				return {
 					...getBase( object ),
-					data: object.coordinates.map( arr => parsePolygon( arr ) ),
+					data: object.coordinates.map( arr => {
+
+						const [ shape, holes ] = parsePolygon( arr );
+						return new Polygon( shape, holes );
+
+					} ),
 				};
 
 			}
