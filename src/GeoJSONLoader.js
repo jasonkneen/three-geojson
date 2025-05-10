@@ -1,9 +1,6 @@
 import { Box3, Vector3, ShapeUtils, BufferAttribute, Mesh, LineSegments } from 'three';
 import { unkinkPolygon } from '@turf/unkink-polygon';
 
-// TODO
-// - remove notation of "multi" polygon etc to simplify
-
 // Extract the non-schema keys from the GeoJSON object
 function extractForeignKeys( object ) {
 
@@ -501,22 +498,18 @@ export class GeoJSONLoader {
 
 				}
 
-				if ( coordinates.length > 1 || object.type === 'MultiPolygon' ) {
+				if ( coordinates.length > 1 ) {
 
 					result.type = 'MultiPolygon';
-					result.data = coordinates.map( arr => {
-
-						const [ shape, holes ] = parsePolygon( arr );
-						return new Polygon( shape, holes );
-
-					} );
-
-				} else {
-
-					const [ shape, holes ] = parsePolygon( coordinates[ 0 ] );
-					result.data = new Polygon( shape, holes );
 
 				}
+
+				result.data = coordinates.map( arr => {
+
+					const [ shape, holes ] = parsePolygon( arr );
+					return new Polygon( shape, holes );
+
+				} );
 
 				return result;
 
