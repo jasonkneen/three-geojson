@@ -5,16 +5,13 @@ import {
 	Group,
 	Box3,
 	Vector3,
-	Mesh,
-	SphereGeometry,
-	MeshBasicMaterial,
 	Clock,
 	DirectionalLight,
 	MeshStandardMaterial,
 	AmbientLight,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GeoJSONLoader, GeoJSONTransformer } from '../src/index.js';
+import { GeoJSONLoader } from '../src/index.js';
 
 // camera
 const camera = new PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 1000 );
