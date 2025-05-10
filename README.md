@@ -2,6 +2,8 @@
 
 Three.js shape loaders for [GeoJSON](https://geojson.org/) and [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry) formats.
 
+World GeoJSON file courtesy of [geojson-maps](https://geojson-maps.kyd.au/).
+
 # Use
 
 # API
