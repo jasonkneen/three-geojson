@@ -1,15 +1,8 @@
 import { Box3, Vector3 } from 'three';
 
 // TODO
-// - how to deal with 3d shapes?
-// - what should be returned?
-// - return "interpreter" class that returns the type / thing you need?
-
-// Use cases
-// - convert to extruded geometry
-// - convert to lines, shapes
-// - ellipsoid or planar usage (transform after?)
-// - shape "breaking" for ellipsoid transformation
+// - add parse to geometry function? polygons can be returned triangulated with outer edges defined so they can be extruded
+// - add an extrude helper for polygons
 
 function parseBounds( arr ) {
 
@@ -115,7 +108,6 @@ export class GeoJSONLoader {
 
 		this.fetchOptions = {};
 		this.flat = false;
-		this.convertToGeometry = true;
 
 	}
 

@@ -30,6 +30,8 @@ export class GeoJSONTransformer {
 
 		}
 
+		return geometry;
+
 	}
 
 }

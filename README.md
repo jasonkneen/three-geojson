@@ -2,11 +2,55 @@
 
 Three.js shape loaders for GeoJSON and WKT formats.
 
-## Use
+# Use
 
-## API
+# API
 
+## GeoJSONLoader
 
+### flat
+
+```js
+flat = false : boolean
+```
+
+If true then the third component for any coordinate is ignored.
+
+### loadAsync
+
+```js
+loadAsync( url: string ): Promise<GeoJSONResult>
+```
+
+### parse
+
+```js
+parse( content: string | object ): GeoJSONResult
+```
+
+## WKTLoader
+
+_extends GeoJSONLoader_
+
+## GeoJSONTransformer
+
+### constructor
+
+```js
+constructor( ellipsoid = WGS84_ELLIPSOID : Ellipsoid )
+```
+
+### transformPoint
+
+```js
+transformPoint( point: Vector3, target: Vector3 ): Vector3
+```
+
+### transformGeometry
+
+```js
+transformGeometry( geometry: BufferGeometry ): BufferGeometry
+```
 
 **spec**
 - https://github.com/stevage/geojson-spec
