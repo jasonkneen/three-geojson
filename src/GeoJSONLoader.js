@@ -1,4 +1,4 @@
-import { Box3, Vector3, ShapeUtils, Line, BufferAttribute, Mesh, BufferGeometry } from 'three';
+import { Box3, Vector3, ShapeUtils, Line, BufferAttribute, Mesh } from 'three';
 import { unkinkPolygon } from '@turf/unkink-polygon';
 
 // TODO
@@ -173,7 +173,7 @@ function getPolygonLineObject() {
 
 }
 
-function getPolygonMeshObject( options ) {
+function getPolygonMeshObject( options = {} ) {
 
 	const {
 		thickness = 0,
@@ -286,8 +286,8 @@ function getPolygonMeshObject( options ) {
 
 	const mesh = new Mesh();
 	mesh.geometry.setIndex( indexArray );
-	mesh.geometry.setAttribute( 'position', new BufferGeometry( posArray, 3, false ) );
-	mesh.computeVertexNormals();
+	mesh.geometry.setAttribute( 'position', new BufferAttribute( posArray, 3, false ) );
+	mesh.geometry.computeVertexNormals();
 
 	return mesh;
 
@@ -307,7 +307,7 @@ class Polygon {
 
 		// save the triangulation indices for the shape, holes concatenated array
 		// note that this function removes the last point in the passed arrays
-		this.indices = ShapeUtils.triangulateShape( shape, holes );
+		this.indices = ShapeUtils.triangulateShape( shape, holes ).flatMap( f => f );
 
 	}
 
@@ -451,6 +451,7 @@ export class GeoJSONLoader {
 					dimension: getDimension( object.coordinates[ 0 ][ 0 ][ 0 ] ),
 
 					getLineObject: getPolygonLineObject,
+					getMeshObject: getPolygonMeshObject,
 				};
 
 				let coordinates;

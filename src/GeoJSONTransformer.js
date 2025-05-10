@@ -1,4 +1,4 @@
-import { Vector3 } from 'three';
+import { MathUtils, Vector3 } from 'three';
 import { WGS84_ELLIPSOID } from '3d-tiles-renderer';
 
 const _vec = /* @__PURE__ */ new Vector3();
@@ -15,7 +15,7 @@ export class GeoJSONTransformer {
 
 	transformPoint( vec, target ) {
 
-		return this.ellipsoid.getCartographicToPosition( vec.x, vec.y, vec.z, target );
+		return this.ellipsoid.getCartographicToPosition( vec.y * MathUtils.DEG2RAD, vec.x * MathUtils.DEG2RAD, vec.z, target );
 
 	}
 
