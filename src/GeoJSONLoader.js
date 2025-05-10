@@ -147,6 +147,7 @@ class Line {
 
 }
 
+// Parser for GeoJSON https://geojson.org/
 export class GeoJSONLoader {
 
 	constructor() {
