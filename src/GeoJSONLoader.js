@@ -122,7 +122,7 @@ function traverse( object, callback ) {
 
 class Polygon {
 
-	constructor( shape, holes ) {
+	constructor( shape = [], holes = [] ) {
 
 		// TODO: clean up lines / shapes (handle 3d?), then triangulate
 		// TODO: add helper for extrusion
