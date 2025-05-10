@@ -47,6 +47,8 @@ new GeoJSONLoader()
 		group.scale.setScalar( 1 / Math.max( ...size ) );
 		group.position.multiplyScalar( group.scale.x );
 
+		console.log( res );
+
 	} );
 
 onResize();

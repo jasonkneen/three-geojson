@@ -137,7 +137,7 @@ export class GeoJSONLoader {
 
 		traverse( root, object => {
 
-			if ( object.type !== 'FeatureCollection' ) {
+			if ( object.type !== 'FeatureCollection' && object.type !== 'GeometryCollection' ) {
 
 				const map = object.type === 'Feature' ? features : geometries;
 				map.push( object );
@@ -154,7 +154,7 @@ export class GeoJSONLoader {
 
 	}
 
-	parseObject( object ) {
+	parseObject( object, feature = null ) {
 
 		const parseCoordinate = this.flat ? parseCoordinate2d : parseCoordinate3d;
 
@@ -164,6 +164,7 @@ export class GeoJSONLoader {
 
 				return {
 					...getBase( object ),
+					feature,
 					data: parseCoordinate( object.coordinates ),
 					dimension: getDimension( object.coordinates ),
 				};
@@ -174,6 +175,7 @@ export class GeoJSONLoader {
 
 				return {
 					...getBase( object ),
+					feature,
 					data: parseCoordinateArray( object.coordinates ),
 					dimension: getDimension( object.coordinates[ 0 ] ),
 				};
@@ -184,6 +186,7 @@ export class GeoJSONLoader {
 
 				return {
 					...getBase( object ),
+					feature,
 					data: new Line( parseCoordinateArray( object.coordinates ) ),
 					dimension: getDimension( object.coordinates[ 0 ] ),
 				};
@@ -194,6 +197,7 @@ export class GeoJSONLoader {
 
 				return {
 					...getBase( object ),
+					feature,
 					data: object.coordinates.map( arr => new Line( parseCoordinateArray( arr ) ) ),
 					dimension: getDimension( object.coordinates[ 0 ][ 0 ] ),
 				};
@@ -205,6 +209,7 @@ export class GeoJSONLoader {
 				const [ shape, holes ] = parsePolygon( object.coordinates );
 				return {
 					...getBase( object ),
+					feature,
 					data: new Polygon( shape, holes ),
 					dimension: getDimension( object.coordinates[ 0 ][ 0 ] ),
 				};
@@ -215,6 +220,7 @@ export class GeoJSONLoader {
 
 				return {
 					...getBase( object ),
+					feature,
 					data: object.coordinates.map( arr => {
 
 						const [ shape, holes ] = parsePolygon( arr );
@@ -230,7 +236,8 @@ export class GeoJSONLoader {
 
 				return {
 					...getBase( object ),
-					data: object.geometries.map( obj => this.parseObject( obj ) ),
+					feature,
+					data: object.geometries.map( obj => this.parseObject( obj, feature ) ),
 				};
 
 			}
@@ -240,7 +247,7 @@ export class GeoJSONLoader {
 				return {
 					...getBase( object ),
 					properties: object.properties,
-					data: this.parseObject( object.geometry ),
+					data: this.parseObject( object.geometry, object ),
 				};
 
 			}
