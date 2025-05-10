@@ -5,7 +5,7 @@ const _vec = /* @__PURE__ */ new Vector3();
 
 // transforms GeoJSON lat, lon, height cartographic coordinates to cartesian
 // coordinates based on the provided ellipsoid from 3DTilesRenderer project.
-export class GeoJSONTransformer {
+export class GeoJSONEllipsoidTransformer {
 
 	constructor( ellipsoid = WGS84_ELLIPSOID ) {
 

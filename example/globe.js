@@ -11,7 +11,7 @@ import {
 	Clock,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GeoJSONLoader, GeoJSONTransformer } from '../src/index.js';
+import { GeoJSONLoader, GeoJSONEllipsoidTransformer } from '../src/index.js';
 
 // camera
 const camera = new PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 1000 );
@@ -44,7 +44,7 @@ new GeoJSONLoader()
 	.loadAsync( url )
 	.then( res => {
 
-		const transformer = new GeoJSONTransformer();
+		const transformer = new GeoJSONEllipsoidTransformer();
 
 		// add base globe color
 		const globeBase = new Mesh(

@@ -157,7 +157,7 @@ Parses geojson content. Takes a raw or stringified json object.
 
 _extends GeoJSONLoader_
 
-## GeoJSONTransformer
+## GeoJSONEllipsoidTransformer
 
 Utility for transforming points and geometry from lat / lon values to an ellipsoidal projection.
 
