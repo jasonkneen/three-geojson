@@ -30,18 +30,18 @@ function parseBounds( arr ) {
 
 function getBase( object ) {
 
-	const dimension =
-		Array.isArray( object.coordinates ) ?
-			object.coordinates[ 0 ].length :
-			object.coordinates.length;
-
 	return {
 		id: object.id ?? null,
 		type: object.type,
-		dimension: dimension,
 		boundingBox: parseBounds( object.bbox ),
 		data: null,
 	};
+
+}
+
+function getDimension( coordinates ) {
+
+	return coordinates.length;
 
 }
 
@@ -66,10 +66,14 @@ function traverse( object, callback ) {
 	switch ( object.type ) {
 
 		case 'GeometryCollection':
-		case 'Feature':
 		case 'FeatureCollection':
 
 			object.data.forEach( o => traverse( o, callback ) );
+			break;
+
+		case 'Feature':
+			traverse( object.data, callback );
+			break;
 
 	}
 
@@ -128,15 +132,15 @@ export class GeoJSONLoader {
 		}
 
 		const root = this.parseObject( json );
-		const features = {};
-		const geometries = {};
+		const features = [];
+		const geometries = [];
 
 		traverse( root, object => {
 
-			if ( object.id !== null ) {
+			if ( object.type !== 'FeatureCollection' ) {
 
 				const map = object.type === 'Feature' ? features : geometries;
-				map[ object.id ] = object;
+				map.push( object );
 
 			}
 
@@ -161,6 +165,7 @@ export class GeoJSONLoader {
 				return {
 					...getBase( object ),
 					data: parseCoordinate( object.coordinates ),
+					dimension: getDimension( object.coordinates ),
 				};
 
 			}
@@ -170,6 +175,7 @@ export class GeoJSONLoader {
 				return {
 					...getBase( object ),
 					data: parseCoordinateArray( object.coordinates ),
+					dimension: getDimension( object.coordinates[ 0 ] ),
 				};
 
 			}
@@ -179,6 +185,7 @@ export class GeoJSONLoader {
 				return {
 					...getBase( object ),
 					data: new Line( parseCoordinateArray( object.coordinates ) ),
+					dimension: getDimension( object.coordinates[ 0 ] ),
 				};
 
 			}
@@ -188,6 +195,7 @@ export class GeoJSONLoader {
 				return {
 					...getBase( object ),
 					data: object.coordinates.map( arr => new Line( parseCoordinateArray( arr ) ) ),
+					dimension: getDimension( object.coordinates[ 0 ][ 0 ] ),
 				};
 
 			}
@@ -198,6 +206,7 @@ export class GeoJSONLoader {
 				return {
 					...getBase( object ),
 					data: new Polygon( shape, holes ),
+					dimension: getDimension( object.coordinates[ 0 ][ 0 ] ),
 				};
 
 			}
@@ -212,6 +221,7 @@ export class GeoJSONLoader {
 						return new Polygon( shape, holes );
 
 					} ),
+					dimension: getDimension( object.coordinates[ 0 ][ 0 ][ 0 ] ),
 				};
 
 			}
