@@ -28,6 +28,7 @@ document.body.appendChild( renderer.domElement );
 // controls
 const clock = new Clock();
 const controls = new OrbitControls( camera, renderer.domElement );
+controls.minDistance = 1;
 controls.enableDamping = true;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 1;
