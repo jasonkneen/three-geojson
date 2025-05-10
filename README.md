@@ -1,8 +1,16 @@
 # three-geojson
 
-Three.js shape loaders for [GeoJSON](https://geojson.org/) and [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry) formats.
+Three.js shape loaders for [GeoJSON](https://geojson.org/) and [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry) formats. World GeoJSON file courtesy of [geojson-maps](https://geojson-maps.kyd.au/).
+
+# Examples
+
+[WGS84 GeoJSON Lines](https://gkjohnson.github.io/three-geojson/example/bundle/globe.html)
 
 # Use
+
+```js
+TODO
+```
 
 # API
 
