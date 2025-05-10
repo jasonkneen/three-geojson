@@ -6,6 +6,8 @@ Three.js shape loaders for [GeoJSON](https://geojson.org/) and [WKT](https://en.
 
 [WGS84 GeoJSON Lines](https://gkjohnson.github.io/three-geojson/example/bundle/globe.html)
 
+[Extruded GeoJSON Polygon](https://gkjohnson.github.io/three-geojson/example/bundle/extruded.html)
+
 # Use
 
 ```js
