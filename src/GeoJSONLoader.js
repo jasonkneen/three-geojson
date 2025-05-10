@@ -1,10 +1,94 @@
-import { ShapePath } from 'three';
+import { Box3, Vector3 } from 'three';
+
+// TODO
+// - how to deal with 3d shapes?
+// - what should be returned?
+// - return "interpreter" class that returns the type / thing you need?
+
+// Use cases
+// - convert to extruded geometry
+// - convert to lines, shapes
+// - ellipsoid or planar usage (transform after?)
+// - shape "breaking" for ellipsoid transformation
+
+function parseBounds( arr ) {
+
+	if ( ! arr ) {
+
+		return null;
+
+	} else if ( arr.length === 4 ) {
+
+		const box = new Box3();
+		box.min.set( arr[ 0 ], arr[ 1 ], 0 );
+		box.max.set( arr[ 2 ], arr[ 3 ], 0 );
+		return box;
+
+	} else if ( arr.length === 6 ) {
+
+		const box = new Box3();
+		box.min.set( arr[ 0 ], arr[ 1 ], arr[ 2 ] );
+		box.max.set( arr[ 3 ], arr[ 4 ], arr[ 5 ] );
+		return box;
+
+	}
+
+}
+
+function getBase( object ) {
+
+	const dimension =
+		Array.isArray( object.coordinates ) ?
+			object.coordinates[ 0 ].length :
+			object.coordinates.length;
+
+	return {
+		id: object.id ?? null,
+		type: object.type,
+		dimension: dimension,
+		boundingBox: parseBounds( object.bbox ),
+		data: null,
+	};
+
+}
+
+function parseCoordinate3d( arr ) {
+
+	return arr.length === 2 ?
+		new Vector3( ...arr, 0 ) :
+		new Vector3( ...arr );
+
+}
+
+function parseCoordinate2d( arr ) {
+
+	return new Vector3( arr[ 0 ], arr[ 1 ], 0 );
+
+}
+
+function traverse( object, callback ) {
+
+	callback( object );
+
+	switch ( object.type ) {
+
+		case 'GeometryCollection':
+		case 'Feature':
+		case 'FeatureCollection':
+
+			object.data.forEach( o => traverse( o, callback ) );
+
+	}
+
+}
 
 export class GeoJSONLoader {
 
 	constructor() {
 
 		this.fetchOptions = {};
+		this.flat = false;
+		this.convertToGeometry = true;
 
 	}
 
@@ -24,7 +108,130 @@ export class GeoJSONLoader {
 
 		}
 
-		const { type } = json;
+		const root = parseObject.call( this, json );
+		const features = {};
+		const geometries = {};
+
+		traverse( root, object => {
+
+			if ( object.id !== null ) {
+
+				const map = object.type === 'Feature' ? features : geometries;
+				map[ object.id ] = object;
+
+			}
+
+		} );
+
+		return {
+			features,
+			geometries,
+			root,
+		};
+
+	}
+
+	parseObject( object ) {
+
+		const parseCoordinate = this.flat ? parseCoordinate2d : parseCoordinate3d;
+
+		switch ( object.type ) {
+
+			case 'Point': {
+
+				return {
+					...getBase( object ),
+					data: parseCoordinate( object.coordinates ),
+				};
+
+			}
+
+			case 'MultiPoint': {
+
+				return {
+					...getBase( object ),
+					data: parseCoordinateArray( object.coordinates ),
+				};
+
+			}
+
+			case 'LineString': {
+
+				return {
+					...getBase( object ),
+					data: parseCoordinateArray( object.coordinates ),
+				};
+
+			}
+
+			case 'MultiLineString': {
+
+				return {
+					...getBase( object ),
+					data: object.coordinates.map( arr => parseCoordinateArray( arr ) ),
+				};
+
+			}
+
+			case 'Polygon': {
+
+				return {
+					...getBase( object ),
+					data: parsePolygon( object.coordinates ),
+				};
+
+			}
+
+			case 'MultiPolygon': {
+
+				return {
+					...getBase( object ),
+					data: object.coordinates.map( arr => parsePolygon( arr ) ),
+				};
+
+			}
+
+			case 'GeometryCollection': {
+
+				return {
+					...getBase( object ),
+					data: object.geometries.map( obj => this.parseObject( obj ) ),
+				};
+
+			}
+
+			case 'Feature': {
+
+				return {
+					...getBase( object ),
+					properties: object.properties,
+					data: this.parseObject( object.geometry ),
+				};
+
+			}
+
+			case 'FeatureCollection': {
+
+				return {
+					...getBase( object ),
+					data: object.features.map( feat => this.parseObject( feat ) ),
+				};
+
+			}
+
+		}
+
+		function parseCoordinateArray( arr ) {
+
+			return arr.map( coord => parseCoordinate( coord ) );
+
+		}
+
+		function parsePolygon( arr ) {
+
+			return arr.map( loop => parseCoordinateArray( loop ) );
+
+		}
 
 	}
 
