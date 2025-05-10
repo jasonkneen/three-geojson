@@ -3,7 +3,6 @@ import { unkinkPolygon } from '@turf/unkink-polygon';
 
 // TODO
 // - remove notation of "multi" polygon etc to simplify
-// - test extrusion
 
 // Extract the non-schema keys from the GeoJSON object
 function extractForeignKeys( object ) {
@@ -207,10 +206,13 @@ function getPolygonMeshObject( options = {} ) {
 
 	}
 
+	// scratch vector
+	const temp = new Vector3();
+
+	// construct the list of positions
 	let index = 0;
 	const halfOffset = totalVerts / 2;
 	const posArray = new Float32Array( totalVerts * 3 );
-	const _vec = new Vector3();
 	polygons.forEach( polygon => {
 
 		const { shape, holes } = polygon;
@@ -221,14 +223,14 @@ function getPolygonMeshObject( options = {} ) {
 
 			for ( let i = 0, l = verts.length; i < l; i ++ ) {
 
-				_vec.copy( verts[ i ] );
-				_vec.z += offset;
-				_vec.toArray( posArray, index );
+				temp.copy( verts[ i ] );
+				temp.z += offset;
+				temp.toArray( posArray, index );
 
 				if ( thickness > 0 ) {
 
-					_vec.z += thickness;
-					_vec.toArray( posArray, index + 3 * halfOffset );
+					temp.z += thickness;
+					temp.toArray( posArray, index + 3 * halfOffset );
 
 				}
 
@@ -240,6 +242,7 @@ function getPolygonMeshObject( options = {} ) {
 
 	} );
 
+	// construct the list of indices
 	let indexArray = [];
 	let indexOffset = 0;
 	polygons.forEach( polygon => {
@@ -249,22 +252,30 @@ function getPolygonMeshObject( options = {} ) {
 		let totalVerts = shape.length;
 		holes.forEach( hole => totalVerts += hole.length );
 
+		// caps
 		for ( let i = 0, l = indices.length; i < l; i += 3 ) {
-
-			indexArray.push( indices[ i + 0 ] + indexOffset );
-			indexArray.push( indices[ i + 1 ] + indexOffset );
-			indexArray.push( indices[ i + 2 ] + indexOffset );
 
 			if ( thickness > 0 ) {
 
-				indexArray.push( indices[ i + 2 ] + indexOffset + halfOffset );
-				indexArray.push( indices[ i + 1 ] + indexOffset + halfOffset );
+				indexArray.push( indices[ i + 2 ] + indexOffset );
+				indexArray.push( indices[ i + 1 ] + indexOffset );
+				indexArray.push( indices[ i + 0 ] + indexOffset );
+
 				indexArray.push( indices[ i + 0 ] + indexOffset + halfOffset );
+				indexArray.push( indices[ i + 1 ] + indexOffset + halfOffset );
+				indexArray.push( indices[ i + 2 ] + indexOffset + halfOffset );
+
+			} else {
+
+				indexArray.push( indices[ i + 0 ] + indexOffset );
+				indexArray.push( indices[ i + 1 ] + indexOffset );
+				indexArray.push( indices[ i + 2 ] + indexOffset );
 
 			}
 
 		}
 
+		// sides
 		if ( thickness > 0 ) {
 
 			let indexOffset2 = indexOffset;
@@ -301,6 +312,7 @@ function getPolygonMeshObject( options = {} ) {
 
 	if ( normals ) {
 
+		// to compute vertex normals we need to remove indices
 		mesh.geometry = mesh.geometry.toNonIndexed();
 		mesh.geometry.computeVertexNormals();
 
