@@ -180,8 +180,21 @@ export class GeoJSONLoader {
 
 			if ( object.type !== 'FeatureCollection' && object.type !== 'GeometryCollection' ) {
 
-				const map = object.type === 'Feature' ? features : geometries;
-				map.push( object );
+				if ( object.type === 'Feature' ) {
+
+					features.push( object );
+
+				} else {
+
+					geometries.push( object );
+
+					if ( object.feature ) {
+
+						object.feature.geometries.push( object );
+
+					}
+
+				}
 
 			}
 
@@ -285,12 +298,16 @@ export class GeoJSONLoader {
 
 			case 'Feature': {
 
-				return {
+				const feature = {
 					...getBase( object ),
 					id: object.id ?? null,
 					properties: object.properties,
-					data: this.parseObject( object.geometry, object ),
+					geometries: [],
+					data: null,
 				};
+
+				feature.data = this.parseObject( object.geometry, feature );
+				return feature;
 
 			}
 
