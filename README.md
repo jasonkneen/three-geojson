@@ -9,7 +9,18 @@ Three.js shape loaders for [GeoJSON](https://geojson.org/) and [WKT](https://en.
 # Use
 
 ```js
-TODO
+// load the content
+const result = await new GeoJSON().loadAsync( url );
+
+// extract polygon lines and project them onto the globe
+const transformer = new GeoJSONTransformer();
+result.polygons.forEach( polygon => {
+
+  const line = polygon.getLineObject();
+  transformer.transformGeometry( line.geometry );
+  scene.add( line );
+
+} );
 ```
 
 # API
