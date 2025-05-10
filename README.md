@@ -1,6 +1,6 @@
 # three-geojson
 
-Three.js shape loaders for [GeoJSON](https://geojson.org/) and [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry) formats. World GeoJSON file courtesy of [geojson-maps](https://geojson-maps.kyd.au/).
+Three.js shape loaders for [GeoJSON](https://geojson.org/) ([readable html](https://stevage.github.io/geojson-spec/)) and [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry) formats. World GeoJSON file courtesy of [geojson-maps](https://geojson-maps.kyd.au/).
 
 Uses [@turfjs/unkink-polygon](https://www.npmjs.com/package/@turf/unkink-polygon) and [wellknown parser](https://github.com/mapbox/wellknown).
 
@@ -182,12 +182,6 @@ transformGeometry( geometry: BufferGeometry ): BufferGeometry
 ```
 
 Transforms geometry position attribute buffer to cartesian frame in-place assuming the values are in the GeoJSON lon, lat, height format.
-
-**spec**
-- https://github.com/stevage/geojson-spec
-  - https://stevage.github.io/geojson-spec/
-- https://en.wikipedia.org/wiki/GeoJSON
-- https://geojson.org/
 
 **Tools**
 - @turf/unkink-polygon
