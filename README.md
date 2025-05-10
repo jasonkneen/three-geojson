@@ -27,7 +27,68 @@ result.polygons.forEach( polygon => {
 
 ## GeoJSONResult
 
-TODO
+```js
+{
+  // list of features in the file
+  features: Array<Feature>,
+
+  // list of all geometries in the file
+  geometries: Array<Polygon|LineString|Points>,
+
+  // list of specific geometry types
+  polygons: Array<Polygon|LineString|Points>,
+  lineStrings: Array<Polygon|LineString|Points>,
+  points: Array<Polygon|LineString|Points>,
+}
+```
+
+**Feature**
+
+```js
+{
+  type: 'Feature',
+  id: string | null,
+  properties: object,
+  geometries: Array<Polygon|LineString|Points>,
+}
+```
+
+**Points**
+
+```js
+{
+  type: string,
+  feature: Feature,
+  data: Vector3 | Array<Vector3>,
+}
+```
+
+**LineString**
+
+```js
+{
+  type: string,
+  feature: Feature,
+
+  getLineObject(): LineSegments,
+}
+```
+
+**Polygon**
+
+```js
+{
+  type: string,
+  feature: Feature,
+
+  getLineObject(): LineSegments,
+  getMeshObject( options: {
+    thickness: number,
+    offset: number,
+    normals: boolean,
+  } ): Mesh,
+}
+```
 
 ## GeoJSONLoader
 
