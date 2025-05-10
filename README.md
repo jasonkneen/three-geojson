@@ -44,6 +44,8 @@ result.polygons.forEach( polygon => {
 
 **Feature**
 
+Definition of a feature that includes properties originally defined in the GeoJSON file.
+
 ```js
 {
   type: 'Feature',
@@ -55,6 +57,8 @@ result.polygons.forEach( polygon => {
 
 **Points**
 
+Definition of a parsed set of point geometry.
+
 ```js
 {
   type: string,
@@ -65,27 +69,33 @@ result.polygons.forEach( polygon => {
 
 **LineString**
 
+Definition of a parsed set of line string geometry.
+
 ```js
 {
   type: string,
   feature: Feature,
 
+  // function for building three.js LineSegments from the line data
   getLineObject(): LineSegments,
 }
 ```
 
 **Polygon**
 
+Definition of a parsed set of polygon geometry.
+
 ```js
 {
   type: string,
   feature: Feature,
 
+  // functions for building three.js LineSegments and Mesh from the line data
   getLineObject(): LineSegments,
   getMeshObject( options: {
     thickness: number,
     offset: number,
-    normals: boolean,
+    generateNormals: boolean,
   } ): Mesh,
 }
 ```
