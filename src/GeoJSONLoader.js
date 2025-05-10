@@ -1,9 +1,10 @@
-import { Box3, Vector3 } from 'three';
+import { Box3, Vector3, ShapeUtils, Line, BufferAttribute, Mesh, BufferGeometry } from 'three';
 import { unkinkPolygon } from '@turf/unkink-polygon';
 
 // TODO
 // - add parse to geometry function? polygons can be returned triangulated with outer edges defined so they can be extruded
 // - add an extrude helper for polygons
+// - add getter functions for different variations of lines, geometries
 
 function extractForeignKeys( object ) {
 
@@ -121,6 +122,178 @@ function traverse( object, callback ) {
 
 }
 
+function constructLineObject( lineData, loop = false ) {
+
+	let total = 0;
+	lineData.forEach( vertices => {
+
+		const segments = loop ? vertices.length : vertices.length - 1;
+		total += segments * 2;
+
+	} );
+
+	let index = 0;
+	const posArray = new Float32Array( total * 3 );
+	lineData.forEach( vertices => {
+
+		const length = vertices.length;
+		const segments = loop ? length : length - 1;
+		for ( let i = 0; i < segments; i ++ ) {
+
+			const ni = ( i + 1 ) % length;
+			vertices[ i ].toArray( posArray, index );
+			vertices[ ni ].toArray( posArray, index + 3 );
+			index += 6;
+
+		}
+
+	} );
+
+	const line = new Line();
+	line.geometry.setAttribute( 'position', new BufferAttribute( posArray, 3, false ) );
+
+	return line;
+
+}
+
+function getLineObject() {
+
+	const { data } = this;
+	const lines = Array.isArray( data ) ? data : [ data ];
+	return constructLineObject( lines.map( line => line.vertices ) );
+
+
+}
+
+function getPolygonLineObject() {
+
+	const { data } = this;
+	const polygons = Array.isArray( data ) ? data : [ data ];
+	return constructLineObject( polygons.flatMap( poly => [ poly.shape, ...poly.holes ] ), true );
+
+}
+
+function getPolygonMeshObject( options ) {
+
+	const {
+		thickness = 0,
+		offset = 0,
+	} = options;
+
+	const polygons = Array.isArray( this.data ) ? this.data : [ this.data ];
+
+	let totalVerts = 0;
+	polygons.forEach( polygon => {
+
+		totalVerts += polygon.shape.length;
+		polygon.holes.forEach( hole => totalVerts += hole.length );
+
+	} );
+
+	if ( thickness > 0 ) {
+
+		totalVerts *= 2;
+
+	}
+
+	let index = 0;
+	const halfOffset = totalVerts / 2;
+	const posArray = new Float32Array( totalVerts * 3 );
+	const _vec = new Vector3();
+	polygons.forEach( polygon => {
+
+		const { shape, holes } = polygon;
+		addVerts( shape );
+		holes.forEach( hole => addVerts( hole ) );
+
+		function addVerts( verts ) {
+
+			for ( let i = 0, l = verts.length; i < l; i ++ ) {
+
+				_vec.copy( verts[ i ] );
+				_vec.z += offset;
+				_vec.toArray( posArray, index );
+
+				if ( thickness > 0 ) {
+
+					_vec.z += thickness;
+					_vec.toArray( posArray, index + 3 * halfOffset );
+
+				}
+
+				index += 3;
+
+			}
+
+		}
+
+	} );
+
+	let indexArray = [];
+	let indexOffset = 0;
+	polygons.forEach( polygon => {
+
+		const { indices, shape, holes } = polygon;
+
+		let totalVerts = shape.length;
+		holes.forEach( hole => totalVerts += hole.length );
+
+		for ( let i = 0, l = indices.length; i < l; i += 3 ) {
+
+			indexArray.push( indices[ i + 0 ] + indexOffset );
+			indexArray.push( indices[ i + 1 ] + indexOffset );
+			indexArray.push( indices[ i + 2 ] + indexOffset );
+
+			if ( thickness > 0 ) {
+
+				indexArray.push( indices[ i + 2 ] + indexOffset + halfOffset );
+				indexArray.push( indices[ i + 1 ] + indexOffset + halfOffset );
+				indexArray.push( indices[ i + 0 ] + indexOffset + halfOffset );
+
+			}
+
+		}
+
+		if ( thickness > 0 ) {
+
+			let indexOffset2 = indexOffset;
+			addSides( shape );
+			holes.forEach( hole => addSides( hole ) );
+
+			function addSides( verts ) {
+
+				for ( let i = 0, l = verts.length; i < l; i ++ ) {
+
+					const i0 = indexOffset2 + i;
+					const i1 = indexOffset2 + ( i + 1 ) % l;
+					const i2 = i0 + halfOffset;
+					const i3 = i1 + halfOffset;
+
+					indexArray.push( i0, i2, i1 );
+					indexArray.push( i1, i2, i3 );
+
+				}
+
+				indexOffset2 += verts.length;
+
+			}
+
+		}
+
+		indexOffset += totalVerts;
+
+	} );
+
+	const mesh = new Mesh();
+	mesh.geometry.setIndex( indexArray );
+	mesh.geometry.setAttribute( 'position', new BufferGeometry( posArray, 3, false ) );
+	mesh.computeVertexNormals();
+
+	return mesh;
+
+
+}
+
 class Polygon {
 
 	constructor( shape = [], holes = [] ) {
@@ -131,13 +304,16 @@ class Polygon {
 		this.isPolygon = true;
 		this.shape = shape;
 		this.holes = holes;
-		this.triangulation = null;
+
+		// save the triangulation indices for the shape, holes concatenated array
+		// note that this function removes the last point in the passed arrays
+		this.indices = ShapeUtils.triangulateShape( shape, holes );
 
 	}
 
 }
 
-class Line {
+class LineString {
 
 	constructor( vertices ) {
 
@@ -222,7 +398,7 @@ export class GeoJSONLoader {
 				return {
 					...getBase( object ),
 					feature,
-					data: parseCoordinate( object.coordinates ),
+					data: [ parseCoordinate( object.coordinates ) ],
 					dimension: getDimension( object.coordinates ),
 				};
 
@@ -244,8 +420,10 @@ export class GeoJSONLoader {
 				return {
 					...getBase( object ),
 					feature,
-					data: new Line( parseCoordinateArray( object.coordinates ) ),
+					data: [ new LineString( parseCoordinateArray( object.coordinates ) ) ],
 					dimension: getDimension( object.coordinates[ 0 ] ),
+
+					getLineObject,
 				};
 
 			}
@@ -255,8 +433,10 @@ export class GeoJSONLoader {
 				return {
 					...getBase( object ),
 					feature,
-					data: object.coordinates.map( arr => new Line( parseCoordinateArray( arr ) ) ),
+					data: object.coordinates.map( arr => new LineString( parseCoordinateArray( arr ) ) ),
 					dimension: getDimension( object.coordinates[ 0 ][ 0 ] ),
+
+					getLineObject,
 				};
 
 			}
@@ -269,6 +449,8 @@ export class GeoJSONLoader {
 					feature,
 					data: null,
 					dimension: getDimension( object.coordinates[ 0 ][ 0 ][ 0 ] ),
+
+					getLineObject: getPolygonLineObject,
 				};
 
 				let coordinates;
