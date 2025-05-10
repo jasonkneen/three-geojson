@@ -92,7 +92,7 @@ window.addEventListener( 'resize', onResize );
 // animation
 function animate() {
 
-	controls.update( Math.min( clock.getDelta(), 16 / 1000 ) );
+	controls.update( Math.min( clock.getDelta(), 64 / 1000 ) );
 	renderer.render( scene, camera );
 
 }

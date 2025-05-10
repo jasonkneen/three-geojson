@@ -35,10 +35,10 @@ result.polygons.forEach( polygon => {
   // list of all geometries in the file
   geometries: Array<Polygon|LineString|Points>,
 
-  // list of specific geometry types
-  polygons: Array<Polygon|LineString|Points>,
-  lineStrings: Array<Polygon|LineString|Points>,
-  points: Array<Polygon|LineString|Points>,
+  // lists of specific geometry types
+  polygons: Array<Polygon>,
+  lines: Array<LineString>,
+  points: Array<Points>,
 }
 ```
 
@@ -51,7 +51,14 @@ Definition of a feature that includes properties originally defined in the GeoJS
   type: 'Feature',
   id: string | null,
   properties: object,
+
+  // list of all geometries in the feature
   geometries: Array<Polygon|LineString|Points>,
+
+  // lists of specific geometry types
+  polygons: Array<Polygon>,
+  lines: Array<LineString>,
+  points: Array<Points>,
 }
 ```
 

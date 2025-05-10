@@ -327,7 +327,6 @@ class Polygon {
 
 	constructor( shape = [], holes = [] ) {
 
-		this.isPolygon = true;
 		this.shape = shape;
 		this.holes = holes;
 
@@ -343,7 +342,6 @@ class LineString {
 
 	constructor( vertices ) {
 
-		this.isLine = true;
 		this.vertices = vertices;
 
 	}
@@ -402,6 +400,15 @@ export class GeoJSONLoader {
 				}
 
 			}
+
+		} );
+
+		features.forEach( feature => {
+
+			const { geometries } = feature;
+			feature.points = geometries.filter( object => /Point/.test( object.type ) );
+			feature.lines = geometries.filter( object => /Line/.test( object.type ) );
+			feature.polygons = geometries.filter( object => /Polygon/.test( object.type ) );
 
 		} );
 
