@@ -418,7 +418,6 @@ export class GeoJSONLoader {
 			points: geometries.filter( object => /Point/.test( object.type ) ),
 			lines: geometries.filter( object => /Line/.test( object.type ) ),
 			polygons: geometries.filter( object => /Polygon/.test( object.type ) ),
-			root,
 		};
 
 	}
