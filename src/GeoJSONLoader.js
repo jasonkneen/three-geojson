@@ -4,6 +4,47 @@ import { Box3, Vector3 } from 'three';
 // - add parse to geometry function? polygons can be returned triangulated with outer edges defined so they can be extruded
 // - add an extrude helper for polygons
 
+function extractForeignKeys( object ) {
+
+	const result = { ...object };
+	delete result.type;
+	delete result.bbox;
+
+	switch ( object.type ) {
+
+		case 'Point':
+		case 'MultiPoint':
+		case 'LineString':
+		case 'MultiLineString':
+		case 'Polygon':
+		case 'MultiPolygon':
+
+			delete result.coordinates;
+			break;
+
+		case 'GeometryCollection':
+
+			delete result.geometries;
+			break;
+
+		case 'Feature':
+
+			delete result.id;
+			delete result.properties;
+			delete result.geometry;
+			break;
+
+		case 'FeatureCollection':
+
+			delete result.features;
+			break;
+
+	}
+
+	return result;
+
+}
+
 function parseBounds( arr ) {
 
 	if ( ! arr ) {
@@ -31,10 +72,10 @@ function parseBounds( arr ) {
 function getBase( object ) {
 
 	return {
-		id: object.id ?? null,
 		type: object.type,
 		boundingBox: parseBounds( object.bbox ),
 		data: null,
+		foreign: extractForeignKeys( object ),
 	};
 
 }
@@ -246,6 +287,7 @@ export class GeoJSONLoader {
 
 				return {
 					...getBase( object ),
+					id: object.id ?? null,
 					properties: object.properties,
 					data: this.parseObject( object.geometry, object ),
 				};
