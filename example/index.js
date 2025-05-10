@@ -3,48 +3,82 @@ import {
 	Scene,
 	WebGLRenderer,
 	Group,
-	Line,
 	Box3,
 	Vector3,
+	Mesh,
+	SphereGeometry,
+	MeshBasicMaterial,
+	Clock,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GeoJSONLoader } from '../src/index.js';
+import { GeoJSONLoader, GeoJSONTransformer } from '../src/index.js';
 
-// init
+// camera
 const camera = new PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 1000 );
 camera.position.z = 2;
 
+// scene
 const scene = new Scene();
 
+// renderer
 const renderer = new WebGLRenderer( { antialias: true } );
 renderer.setAnimationLoop( animate );
 document.body.appendChild( renderer.domElement );
 
+// controls
+const clock = new Clock();
 const controls = new OrbitControls( camera, renderer.domElement );
+controls.enableDamping = true;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 1;
 
-const url = 'https://raw.githubusercontent.com/openlayers/openlayers/refs/heads/main/examples/data/geojson/polygon-samples.geojson';
+// construct geo group
+const group = new Group();
+group.rotation.x = - Math.PI / 2;
+scene.add( group );
+
+// load geojson
+const url = new URL( './world.geojson', import.meta.url );
 new GeoJSONLoader()
 	.loadAsync( url )
 	.then( res => {
 
-		const group = new Group();
-		scene.add( group );
+		const transformer = new GeoJSONTransformer();
 
-		res.geometries.forEach( geom => {
+		// add base globe color
+		const globeBase = new Mesh(
+			new SphereGeometry( 1, 100, 50 ),
+			new MeshBasicMaterial( {
+				color: 0x222222,
+				transparent: true,
+				opacity: 0.5,
+				depthWrite: false,
 
-			const line = new Line();
-			line.geometry.setFromPoints( geom.data.shape );
+				polygonOffset: true,
+				polygonOffsetFactor: 1,
+				polygonOffsetUnits: 1,
+			} ),
+		);
+		globeBase.scale.copy( transformer.ellipsoid.radius );
+		group.add( globeBase );
+
+		// load the globe lines
+		res.polygons.forEach( geom => {
+
+			const line = geom.getLineObject();
+			transformer.transformGeometry( line.geometry );
 			group.add( line );
 
 		} );
 
+		// scale and center the model
 		const box = new Box3();
 		box.setFromObject( group );
 		box.getCenter( group.position ).multiplyScalar( - 1 );
 
 		const size = new Vector3();
 		box.getSize( size );
-		group.scale.setScalar( 1 / Math.max( ...size ) );
+		group.scale.setScalar( 1.5 / Math.max( ...size ) );
 		group.position.multiplyScalar( group.scale.x );
 
 		console.log( res );
@@ -57,6 +91,7 @@ window.addEventListener( 'resize', onResize );
 // animation
 function animate() {
 
+	controls.update( Math.min( clock.getDelta(), 16 / 1000 ) );
 	renderer.render( scene, camera );
 
 }

@@ -1,11 +1,11 @@
-import { Box3, Vector3, ShapeUtils, Line, BufferAttribute, Mesh } from 'three';
+import { Box3, Vector3, ShapeUtils, BufferAttribute, Mesh, LineSegments } from 'three';
 import { unkinkPolygon } from '@turf/unkink-polygon';
 
 // TODO
-// - add parse to geometry function? polygons can be returned triangulated with outer edges defined so they can be extruded
-// - add an extrude helper for polygons
-// - add getter functions for different variations of lines, geometries
+// - remove notation of "multi" polygon etc to simplify
+// - test extrusion
 
+// Extract the non-schema keys from the GeoJSON object
 function extractForeignKeys( object ) {
 
 	const result = { ...object };
@@ -47,6 +47,7 @@ function extractForeignKeys( object ) {
 
 }
 
+// Parse the bounds to a three.js Box3
 function parseBounds( arr ) {
 
 	if ( ! arr ) {
@@ -71,6 +72,7 @@ function parseBounds( arr ) {
 
 }
 
+// Get the base object definition for GeoJSON type
 function getBase( object ) {
 
 	return {
@@ -82,12 +84,14 @@ function getBase( object ) {
 
 }
 
+// Retrieve the coordinate dimension
 function getDimension( coordinates ) {
 
 	return coordinates?.length ?? null;
 
 }
 
+// Parse a coordinate to a three.js Vector3
 function parseCoordinate3d( arr ) {
 
 	return arr.length === 2 ?
@@ -102,6 +106,7 @@ function parseCoordinate2d( arr ) {
 
 }
 
+// Traverse the parsed tree
 function traverse( object, callback ) {
 
 	callback( object );
@@ -122,18 +127,21 @@ function traverse( object, callback ) {
 
 }
 
+// Takes a set of vertex data and constructs a line segment
 function constructLineObject( lineData, loop = false ) {
 
-	let total = 0;
+	// calculate total segments
+	let totalSegments = 0;
 	lineData.forEach( vertices => {
 
 		const segments = loop ? vertices.length : vertices.length - 1;
-		total += segments * 2;
+		totalSegments += segments * 2;
 
 	} );
 
+	// roll up all the vertices
 	let index = 0;
-	const posArray = new Float32Array( total * 3 );
+	const posArray = new Float32Array( totalSegments * 3 );
 	lineData.forEach( vertices => {
 
 		const length = vertices.length;
@@ -149,13 +157,14 @@ function constructLineObject( lineData, loop = false ) {
 
 	} );
 
-	const line = new Line();
+	const line = new LineSegments();
 	line.geometry.setAttribute( 'position', new BufferAttribute( posArray, 3, false ) );
 
 	return line;
 
 }
 
+// Shape construction functions
 function getLineObject() {
 
 	const { data } = this;
@@ -178,10 +187,12 @@ function getPolygonMeshObject( options = {} ) {
 	const {
 		thickness = 0,
 		offset = 0,
+		normals = true,
 	} = options;
 
 	const polygons = Array.isArray( this.data ) ? this.data : [ this.data ];
 
+	// calculate the total number of positions needed for the geometry
 	let totalVerts = 0;
 	polygons.forEach( polygon => {
 
@@ -287,7 +298,13 @@ function getPolygonMeshObject( options = {} ) {
 	const mesh = new Mesh();
 	mesh.geometry.setIndex( indexArray );
 	mesh.geometry.setAttribute( 'position', new BufferAttribute( posArray, 3, false ) );
-	mesh.geometry.computeVertexNormals();
+
+	if ( normals ) {
+
+		mesh.geometry = mesh.geometry.toNonIndexed();
+		mesh.geometry.computeVertexNormals();
+
+	}
 
 	return mesh;
 
@@ -297,9 +314,6 @@ function getPolygonMeshObject( options = {} ) {
 class Polygon {
 
 	constructor( shape = [], holes = [] ) {
-
-		// TODO: clean up lines / shapes (handle 3d?), then triangulate
-		// TODO: add helper for extrusion
 
 		this.isPolygon = true;
 		this.shape = shape;
@@ -382,6 +396,9 @@ export class GeoJSONLoader {
 		return {
 			features,
 			geometries,
+			points: geometries.filter( object => /Point/.test( object.type ) ),
+			lines: geometries.filter( object => /Line/.test( object.type ) ),
+			polygons: geometries.filter( object => /Polygon/.test( object.type ) ),
 			root,
 		};
 
