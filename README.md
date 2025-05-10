@@ -2,6 +2,8 @@
 
 Three.js shape loaders for [GeoJSON](https://geojson.org/) and [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry) formats. World GeoJSON file courtesy of [geojson-maps](https://geojson-maps.kyd.au/).
 
+Uses [@turfjs/unkink-polygon](https://www.npmjs.com/package/@turf/unkink-polygon) and [wellknown parser](https://github.com/mapbox/wellknown).
+
 # Examples
 
 [WGS84 GeoJSON Lines](https://gkjohnson.github.io/three-geojson/example/bundle/globe.html)
