@@ -1,4 +1,5 @@
 import { Box3, Vector3 } from 'three';
+import { unkinkPolygon } from '@turf/unkink-polygon';
 
 // TODO
 // - add parse to geometry function? polygons can be returned triangulated with outer edges defined so they can be extruded
@@ -82,7 +83,7 @@ function getBase( object ) {
 
 function getDimension( coordinates ) {
 
-	return coordinates.length;
+	return coordinates?.length ?? null;
 
 }
 
@@ -154,6 +155,7 @@ export class GeoJSONLoader {
 
 		this.fetchOptions = {};
 		this.flat = false;
+		this.decomposePolygons = true;
 
 	}
 
@@ -259,31 +261,46 @@ export class GeoJSONLoader {
 
 			}
 
-			case 'Polygon': {
-
-				const [ shape, holes ] = parsePolygon( object.coordinates );
-				return {
-					...getBase( object ),
-					feature,
-					data: new Polygon( shape, holes ),
-					dimension: getDimension( object.coordinates[ 0 ][ 0 ] ),
-				};
-
-			}
-
+			case 'Polygon':
 			case 'MultiPolygon': {
 
-				return {
+				const result = {
 					...getBase( object ),
 					feature,
-					data: object.coordinates.map( arr => {
+					data: null,
+					dimension: getDimension( object.coordinates[ 0 ][ 0 ][ 0 ] ),
+				};
+
+				let coordinates;
+				if ( this.decomposePolygons ) {
+
+					coordinates = unkinkPolygon( object ).features
+						.map( feature => feature.geometry.coordinates );
+
+				} else {
+
+					coordinates = object.type === 'Polygon' ? [ object.coordinates ] : object.coordinates;
+
+				}
+
+				if ( coordinates.length > 1 || object.type === 'MultiPolygon' ) {
+
+					result.type = 'MultiPolygon';
+					result.data = coordinates.map( arr => {
 
 						const [ shape, holes ] = parsePolygon( arr );
 						return new Polygon( shape, holes );
 
-					} ),
-					dimension: getDimension( object.coordinates[ 0 ][ 0 ][ 0 ] ),
-				};
+					} );
+
+				} else {
+
+					const [ shape, holes ] = parsePolygon( coordinates[ 0 ] );
+					result.data = new Polygon( shape, holes );
+
+				}
+
+				return result;
 
 			}
 

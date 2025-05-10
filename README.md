@@ -11,10 +11,18 @@ Three.js shape loaders for [GeoJSON](https://geojson.org/) and [WKT](https://en.
 ### flat
 
 ```js
-flat = false : boolean
+flat = false: boolean
 ```
 
 If true then the third component for any coordinate is ignored.
+
+### decomposePolygons
+
+```js
+decomposePolygons = true: boolean
+```
+
+If true then self-intersecting polygons are decomposed into individual parts to enable triangulation.
 
 ### loadAsync
 
@@ -37,7 +45,7 @@ _extends GeoJSONLoader_
 ### constructor
 
 ```js
-constructor( ellipsoid = WGS84_ELLIPSOID : Ellipsoid )
+constructor( ellipsoid = WGS84_ELLIPSOID: Ellipsoid )
 ```
 
 ### transformPoint

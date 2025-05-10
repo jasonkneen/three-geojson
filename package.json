@@ -15,6 +15,7 @@
   "author": "Garrett Johnson <garrett.kjohnson@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@turf/unkink-polygon": "^7.2.0",
     "wellknown": "^0.5.0"
   },
   "devDependencies": {
@@ -24,8 +25,8 @@
     "three": "^0.176.0",
     "vite": "^6.3.5"
   },
-	"peerDependencies": {
-    "three": "^0.140.0",
-    "3d-tiles-renderer": "^0.4.0"
-	}
+  "peerDependencies": {
+    "3d-tiles-renderer": "^0.4.0",
+    "three": "^0.140.0"
+  }
 }
