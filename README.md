@@ -1,6 +1,6 @@
 # three-geojson
 
-Three.js shape loaders for GeoJSON and WKT formats.
+Three.js shape loaders for [GeoJSON](https://geojson.org/) and [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry) formats.
 
 # Use
 
