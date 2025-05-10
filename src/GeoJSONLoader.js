@@ -186,7 +186,7 @@ function getPolygonMeshObject( options = {} ) {
 	const {
 		thickness = 0,
 		offset = 0,
-		normals = true,
+		generateNormals = true,
 	} = options;
 
 	const polygons = Array.isArray( this.data ) ? this.data : [ this.data ];
@@ -310,7 +310,7 @@ function getPolygonMeshObject( options = {} ) {
 	mesh.geometry.setIndex( indexArray );
 	mesh.geometry.setAttribute( 'position', new BufferAttribute( posArray, 3, false ) );
 
-	if ( normals ) {
+	if ( generateNormals ) {
 
 		// to compute vertex normals we need to remove indices
 		mesh.geometry = mesh.geometry.toNonIndexed();
