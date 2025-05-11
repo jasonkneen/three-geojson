@@ -88,7 +88,9 @@ Definition of a parsed set of line string geometry.
   feature: Feature,
 
   // function for building three.js LineSegments from the line data
-  getLineObject(): LineSegments,
+  getLineObject( options: {
+    flat = false: boolean,
+	} ): LineSegments,
 }
 ```
 
@@ -102,24 +104,20 @@ Definition of a parsed set of polygon geometry.
   feature: Feature,
 
   // functions for building three.js LineSegments and Mesh from the line data
-  getLineObject(): LineSegments,
+  getLineObject( options: {
+    flat = false: boolean,
+	} ): LineSegments,
+
   getMeshObject( options: {
-    thickness: number,
-    offset: number,
-    generateNormals: boolean,
+    thickness = 0: number,
+    offset = 0: number,
+    generateNormals = true: boolean,
+		flat = false: boolean,
   } ): Mesh,
 }
 ```
 
 ## GeoJSONLoader
-
-### flat
-
-```js
-flat = false: boolean
-```
-
-If true then the third component for any coordinate is ignored.
 
 ### decomposePolygons
 

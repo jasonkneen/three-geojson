@@ -88,17 +88,11 @@ function getDimension( coordinates ) {
 }
 
 // Parse a coordinate to a three.js Vector3
-function parseCoordinate3d( arr ) {
+function parseCoordinate( arr ) {
 
 	return arr.length === 2 ?
 		new Vector3( ...arr, 0 ) :
 		new Vector3( ...arr );
-
-}
-
-function parseCoordinate2d( arr ) {
-
-	return new Vector3( arr[ 0 ], arr[ 1 ], 0 );
 
 }
 
@@ -124,7 +118,9 @@ function traverse( object, callback ) {
 }
 
 // Takes a set of vertex data and constructs a line segment
-function constructLineObject( lineData, loop = false ) {
+function constructLineObject( lineData, loop = false, flat = false ) {
+
+	const vecToArray = flat ? vecToArray2d : vecToArray3d;
 
 	// calculate total segments
 	let totalSegments = 0;
@@ -145,8 +141,8 @@ function constructLineObject( lineData, loop = false ) {
 		for ( let i = 0; i < segments; i ++ ) {
 
 			const ni = ( i + 1 ) % length;
-			vertices[ i ].toArray( posArray, index );
-			vertices[ ni ].toArray( posArray, index + 3 );
+			vecToArray( vertices[ i ], posArray, index );
+			vecToArray( vertices[ ni ], posArray, index + 3 );
 			index += 6;
 
 		}
@@ -158,23 +154,41 @@ function constructLineObject( lineData, loop = false ) {
 
 	return line;
 
+	function vecToArray3d( vec, array, offset ) {
+
+		array[ offset ] = vec.x;
+		array[ offset + 1 ] = vec.y;
+		array[ offset + 2 ] = vec.z;
+
+	}
+
+	function vecToArray2d( vec, array, offset ) {
+
+		array[ offset ] = vec.x;
+		array[ offset + 1 ] = vec.y;
+		array[ offset + 2 ] = 0;
+
+	}
+
 }
 
 // Shape construction functions
-function getLineObject() {
+function getLineObject( options = {} ) {
 
 	const { data } = this;
+	const { flat = false } = options;
 	const lines = Array.isArray( data ) ? data : [ data ];
-	return constructLineObject( lines.map( line => line.vertices ) );
+	return constructLineObject( lines.map( line => line.vertices ), false, flat );
 
 
 }
 
-function getPolygonLineObject() {
+function getPolygonLineObject( options = {} ) {
 
 	const { data } = this;
+	const { flat = false } = options;
 	const polygons = Array.isArray( data ) ? data : [ data ];
-	return constructLineObject( polygons.flatMap( poly => [ poly.shape, ...poly.holes ] ), true );
+	return constructLineObject( polygons.flatMap( poly => [ poly.shape, ...poly.holes ] ), true, flat );
 
 }
 
@@ -184,6 +198,7 @@ function getPolygonMeshObject( options = {} ) {
 		thickness = 0,
 		offset = 0,
 		generateNormals = true,
+		flat = false,
 	} = options;
 
 	const polygons = Array.isArray( this.data ) ? this.data : [ this.data ];
@@ -221,7 +236,7 @@ function getPolygonMeshObject( options = {} ) {
 			for ( let i = 0, l = verts.length; i < l; i ++ ) {
 
 				temp.copy( verts[ i ] );
-				temp.z += offset;
+				temp.z = flat ? offset : temp.z + offset;
 				temp.toArray( posArray, index );
 
 				if ( thickness > 0 ) {
@@ -348,7 +363,6 @@ export class GeoJSONLoader {
 	constructor() {
 
 		this.fetchOptions = {};
-		this.flat = false;
 		this.decomposePolygons = true;
 
 	}
@@ -417,8 +431,6 @@ export class GeoJSONLoader {
 	}
 
 	parseObject( object, feature = null ) {
-
-		const parseCoordinate = this.flat ? parseCoordinate2d : parseCoordinate3d;
 
 		switch ( object.type ) {
 
