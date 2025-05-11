@@ -9,13 +9,18 @@ import {
 	SphereGeometry,
 	MeshBasicMaterial,
 	Clock,
+	MeshStandardMaterial,
+	DirectionalLight,
+	AmbientLight,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GeoJSONLoader, GeoJSONEllipsoidTransformer } from '../src/index.js';
 
 // camera
 const camera = new PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 1000 );
-camera.position.z = 2;
+camera.position.x = - 2;
+camera.position.y = 1;
+camera.position.z = - 1;
 
 // scene
 const scene = new Scene();
@@ -32,6 +37,13 @@ controls.minDistance = 1;
 controls.enableDamping = true;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 1;
+
+// lights
+const directionalLight = new DirectionalLight( 0xffffff, 3.5 );
+directionalLight.position.set( 1, 2, 0 );
+
+const ambientLight = new AmbientLight( 0xffffff, 1.0 );
+scene.add( directionalLight, ambientLight );
 
 // construct geo group
 const group = new Group();
@@ -52,7 +64,7 @@ new GeoJSONLoader()
 			new MeshBasicMaterial( {
 				color: 0x222222,
 				transparent: true,
-				opacity: 0.5,
+				opacity: 0.75,
 				depthWrite: false,
 
 				polygonOffset: true,
@@ -71,6 +83,19 @@ new GeoJSONLoader()
 			group.add( line );
 
 		} );
+
+		res.features
+			.filter( f => /Japan/.test( f.properties.name ) )
+			.flatMap( f => f.polygons )
+			.forEach( geom => {
+
+				const mesh = geom.getMeshObject( { thickness: 1e5 } );
+				mesh.material = new MeshStandardMaterial();
+
+				transformer.transformGeometry( mesh.geometry );
+				group.add( mesh );
+
+			} );
 
 		// scale and center the model
 		const box = new Box3();
