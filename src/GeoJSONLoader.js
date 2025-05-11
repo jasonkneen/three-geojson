@@ -244,7 +244,8 @@ function getPolygonMeshObject( options = {} ) {
 	let indexOffset = 0;
 	polygons.forEach( polygon => {
 
-		const { indices, shape, holes } = polygon;
+		const { shape, holes } = polygon;
+		const indices = ShapeUtils.triangulateShape( shape, holes ).flatMap( f => f );
 
 		let totalVerts = shape.length;
 		holes.forEach( hole => totalVerts += hole.length );
@@ -326,10 +327,6 @@ class Polygon {
 
 		this.shape = shape;
 		this.holes = holes;
-
-		// save the triangulation indices for the shape, holes concatenated array
-		// note that this function removes the last point in the passed arrays
-		this.indices = ShapeUtils.triangulateShape( shape, holes ).flatMap( f => f );
 
 	}
 
@@ -506,7 +503,12 @@ export class GeoJSONLoader {
 
 				result.data = coordinates.map( arr => {
 
-					const [ shape, holes ] = parsePolygon( arr );
+					const [ shape = [], holes = [] ] = parsePolygon( arr );
+
+					// remove the last vertex because it's duplicate and will cause triangulation issues
+					shape.pop();
+					holes.forEach( hole => hole.pop() );
+
 					return new Polygon( shape, holes );
 
 				} );
