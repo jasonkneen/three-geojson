@@ -207,8 +207,27 @@ function getPolygonMeshObject( options = {} ) {
 	let totalVerts = 0;
 	polygons.forEach( polygon => {
 
-		totalVerts += polygon.shape.length;
-		polygon.holes.forEach( hole => totalVerts += hole.length );
+		const { holes, shape } = polygon;
+		totalVerts += shape.length;
+		holes.forEach( hole => totalVerts += hole.length );
+
+		// fix the shape orientations since the spec is a bit ambiguous here and old versions did not
+		// specify winding order
+		if ( ! ShapeUtils.isClockWise( shape ) ) {
+
+			shape.reverse();
+
+		}
+
+		holes.forEach( hole => {
+
+			if ( ShapeUtils.isClockWise( hole ) ) {
+
+				hole.reverse();
+
+			}
+
+		} );
 
 	} );
 
