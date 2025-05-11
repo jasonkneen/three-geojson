@@ -182,10 +182,3 @@ transformGeometry( geometry: BufferGeometry ): BufferGeometry
 ```
 
 Transforms geometry position attribute buffer to cartesian frame in-place assuming the values are in the GeoJSON lon, lat, height format.
-
-**Tools**
-- @turf/unkink-polygon
-- https://github.com/mapbox/delaunator
-- three.js' earcut
-- https://www.npmjs.com/package/cdt2d
-- https://github.com/mapbox/wellknown
