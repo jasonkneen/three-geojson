@@ -1,6 +1,6 @@
 # three-geojson
 
-[![build](https://img.shields.io/github/actions/workflow/status/gkjohnson/three-geojson/node.js.yml?style=flat-square&label=build&branch=master)](https://github.com/gkjohnson/three-geojson/actions)
+[![build](https://img.shields.io/github/actions/workflow/status/gkjohnson/three-geojson/node.js.yml?style=flat-square&label=build&branch=main)](https://github.com/gkjohnson/three-geojson/actions)
 [![github](https://flat.badgen.net/badge/icon/github?icon=github&label)](https://github.com/gkjohnson/three-geojson/)
 [![twitter](https://flat.badgen.net/badge/twitter/@garrettkjohnson/?icon&label)](https://twitter.com/garrettkjohnson)
 [![sponsors](https://img.shields.io/github/sponsors/gkjohnson?style=flat-square&color=1da1f2)](https://github.com/sponsors/gkjohnson/)
