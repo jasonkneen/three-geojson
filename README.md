@@ -4,6 +4,9 @@ Three.js shape loaders for [GeoJSON](https://geojson.org/) ([readable html](http
 
 Uses [@turfjs/unkink-polygon](https://www.npmjs.com/package/@turf/unkink-polygon) and [wellknown parser](https://github.com/mapbox/wellknown). World GeoJSON file courtesy of [geojson-maps](https://geojson-maps.kyd.au/).
 
+> [!NOTE]
+> This project is not hosted on npm and must be installed via Github repository.
+
 # Examples
 
 [WGS84 GeoJSON Lines](https://gkjohnson.github.io/three-geojson/example/bundle/globe.html)
