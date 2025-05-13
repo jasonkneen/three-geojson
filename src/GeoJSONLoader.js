@@ -1,6 +1,26 @@
 import { Box3, Vector3, ShapeUtils, BufferAttribute, Mesh, LineSegments } from 'three';
 import { unkinkPolygon } from '@turf/unkink-polygon';
 
+// Removes any duplicate vertices
+function dedupeCoordinates( coords ) {
+
+	for ( let i = 0; i < coords.length - 1; i ++ ) {
+
+		const ni = ( i + 1 ) % coords.length;
+		const c = coords[ i ];
+		const nc = coords[ ni ];
+
+		if ( c[ 0 ] === nc[ 0 ] && c[ 1 ] === nc[ 1 ] ) {
+
+			coords.splice( ni, 1 );
+			i --;
+
+		}
+
+	}
+
+}
+
 // Extract the non-schema keys from the GeoJSON object
 function extractForeignKeys( object ) {
 
@@ -516,6 +536,9 @@ export class GeoJSONLoader {
 
 				let coordinates;
 				if ( this.decomposePolygons ) {
+
+					// unkink polygons function will fail if there are duplicate vertices
+					object.coordinates.forEach( coord => dedupeCoordinates( coord ) );
 
 					coordinates = unkinkPolygon( object ).features
 						.map( feature => feature.geometry.coordinates );
