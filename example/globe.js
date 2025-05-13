@@ -79,7 +79,7 @@ new GeoJSONLoader()
 		res.polygons.forEach( geom => {
 
 			const line = geom.getLineObject();
-			transformer.transformGeometry( line.geometry );
+			transformer.transformObject( line );
 			group.add( line );
 
 		} );
@@ -92,7 +92,7 @@ new GeoJSONLoader()
 				const mesh = geom.getMeshObject( { thickness: 1e5 } );
 				mesh.material = new MeshStandardMaterial();
 
-				transformer.transformGeometry( mesh.geometry );
+				transformer.transformObject( mesh );
 				group.add( mesh );
 
 			} );
