@@ -1,5 +1,5 @@
 import { GeoJSONLoader } from './GeoJSONLoader.js';
-import { parse } from 'wellknown';
+import { wktToGeoJSON } from "betterknown";
 
 export class WKTLoader extends GeoJSONLoader {
 
@@ -13,7 +13,7 @@ export class WKTLoader extends GeoJSONLoader {
 
 	parse( text ) {
 
-		return super.parse( parse( text ) );
+		return super.parse( wktToGeoJSON( text ) );
 
 	}
 
