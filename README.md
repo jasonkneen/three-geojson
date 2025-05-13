@@ -100,6 +100,7 @@ Definition of a parsed set of line string geometry.
   // function for building three.js LineSegments from the line data
   getLineObject( options: {
     flat = false: boolean,
+		offset = 0: number,
   } ): LineSegments,
 }
 ```
@@ -116,6 +117,7 @@ Definition of a parsed set of polygon geometry.
   // functions for building three.js LineSegments and Mesh from the line data
   getLineObject( options: {
     flat = false: boolean,
+		offset = 0: number,
   } ): LineSegments,
 
   getMeshObject( options: {
