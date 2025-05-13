@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.0.4] - Unreleased
 ### Fixed
 - Replaced "wellknown" with "betterknown" package for WKT parsing for improved support.
+- Add fix for deduping vertices when unkinking a polygon.
 
 ## [0.0.3] - 2025.05.13
 ### Fixed
