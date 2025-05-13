@@ -138,7 +138,13 @@ function traverse( object, callback ) {
 }
 
 // Takes a set of vertex data and constructs a line segment
-function constructLineObject( lineData, loop = false, flat = false ) {
+function constructLineObject( lineData, options = {} ) {
+
+	const {
+		flat = false,
+		loop = false,
+		offset = 0,
+	} = options;
 
 	const vecToArray = flat ? vecToArray2d : vecToArray3d;
 
@@ -174,19 +180,19 @@ function constructLineObject( lineData, loop = false, flat = false ) {
 
 	return line;
 
-	function vecToArray3d( vec, array, offset ) {
+	function vecToArray3d( vec, array, indexOffset ) {
 
-		array[ offset ] = vec.x;
-		array[ offset + 1 ] = vec.y;
-		array[ offset + 2 ] = vec.z;
+		array[ indexOffset ] = vec.x;
+		array[ indexOffset + 1 ] = vec.y;
+		array[ indexOffset + 2 ] = vec.z + offset;
 
 	}
 
-	function vecToArray2d( vec, array, offset ) {
+	function vecToArray2d( vec, array, indexOffset ) {
 
-		array[ offset ] = vec.x;
-		array[ offset + 1 ] = vec.y;
-		array[ offset + 2 ] = 0;
+		array[ indexOffset ] = vec.x;
+		array[ indexOffset + 1 ] = vec.y;
+		array[ indexOffset + 2 ] = offset;
 
 	}
 
@@ -196,9 +202,11 @@ function constructLineObject( lineData, loop = false, flat = false ) {
 function getLineObject( options = {} ) {
 
 	const { data } = this;
-	const { flat = false } = options;
 	const lines = Array.isArray( data ) ? data : [ data ];
-	return constructLineObject( lines.map( line => line.vertices ), false, flat );
+	return constructLineObject( lines.map( line => line.vertices ), {
+		loop: false,
+		...options,
+ 	} );
 
 
 }
@@ -206,9 +214,11 @@ function getLineObject( options = {} ) {
 function getPolygonLineObject( options = {} ) {
 
 	const { data } = this;
-	const { flat = false } = options;
 	const polygons = Array.isArray( data ) ? data : [ data ];
-	return constructLineObject( polygons.flatMap( poly => [ poly.shape, ...poly.holes ] ), true, flat );
+	return constructLineObject( polygons.flatMap( poly => [ poly.shape, ...poly.holes ] ), {
+		loop: true,
+		...options,
+	} );
 
 }
 

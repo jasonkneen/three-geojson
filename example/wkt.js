@@ -66,8 +66,8 @@ new WKTLoader()
 				const line = geom.getLineObject();
 				line.material.color.set( 0xf50057 );
 
-				const line2 = line.clone();
-				line2.position.z = 1;
+				const line2 = geom.getLineObject( { offset: 1 } );
+				line2.material.color.set( 0xf50057 );
 
 				group.add( mesh, line, line2 );
 
