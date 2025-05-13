@@ -26,7 +26,7 @@
     "vite": "^6.3.5"
   },
   "peerDependencies": {
-    "3d-tiles-renderer": "^0.4.0",
-    "three": "^0.140.0"
+    "3d-tiles-renderer": ">=0.4.0",
+    "three": ">=0.140.0"
   }
 }
