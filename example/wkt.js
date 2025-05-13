@@ -11,7 +11,7 @@ import {
 	AmbientLight,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GeoJSONLoader, WKTLoader } from '../src/index.js';
+import { WKTLoader } from '../src/index.js';
 
 // camera
 const camera = new PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 1000 );
@@ -32,10 +32,10 @@ controls.minDistance = 1;
 controls.enableDamping = true;
 controls.autoRotate = true;
 
-const directionalLight = new DirectionalLight( 0xffffff, 3.5 );
+const directionalLight = new DirectionalLight( 0xffffff, 2.5 );
 directionalLight.position.set( 1, 2, 3 );
 
-const ambientLight = new AmbientLight( 0xffffff, 1.0 );
+const ambientLight = new AmbientLight( 0xffffff, 0.5 );
 scene.add( directionalLight, ambientLight );
 
 // construct geo group
@@ -48,7 +48,6 @@ new WKTLoader()
 	.loadAsync( url )
 	.then( res => {
 
-		console.log( res )
 		// load the globe lines
 		res.polygons
 			.forEach( geom => {
@@ -57,15 +56,20 @@ new WKTLoader()
 					thickness: 1,
 				} );
 
-				mesh.material = new MeshStandardMaterial();
+				mesh.material = new MeshStandardMaterial( {
+					polygonOffset: true,
+					polygonOffsetFactor: 1,
+					polygonOffsetUnits: 1,
+					color: 0xfce4ec,
+				} );
 
+				const line = geom.getLineObject();
+				line.material.color.set( 0xf50057 );
 
-				// const mesh = geom.getLineObject( {
-				// 	thickness: 1,
-				// } );
+				const line2 = line.clone();
+				line2.position.z = 1;
 
-				// console.log( mesh )
-				group.add( mesh );
+				group.add( mesh, line, line2 );
 
 			} );
 
