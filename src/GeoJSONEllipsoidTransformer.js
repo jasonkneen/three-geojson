@@ -34,4 +34,17 @@ export class GeoJSONEllipsoidTransformer {
 
 	}
 
+	transformObject( mesh ) {
+
+		const { geometry } = mesh;
+		this.transformGeometry( geometry );
+
+		geometry.computeBoundingSphere();
+		mesh.position.copy( geometry.boundingSphere.center );
+		geometry.center();
+
+		return mesh;
+
+	}
+
 }

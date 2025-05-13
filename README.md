@@ -31,7 +31,7 @@ const transformer = new GeoJSONTransformer();
 result.polygons.forEach( polygon => {
 
   const line = polygon.getLineObject();
-  transformer.transformGeometry( line.geometry );
+  transformer.transformObject( line );
   scene.add( line );
 
 } );
@@ -194,3 +194,11 @@ transformGeometry( geometry: BufferGeometry ): BufferGeometry
 ```
 
 Transforms geometry position attribute buffer to cartesian frame in-place assuming the values are in the GeoJSON lon, lat, height format.
+
+### transformObject
+
+```js
+transformObject( object: Mesh | Line ): Mesh | Line
+```
+
+Transforms the given object with geometry, centers the geometry, and offsets the object transform to prevent precision-related rendering artifacts.
