@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.0.4] - Unreleased
 ### Added
 - "offset" option when generating line objects.
+- GeoJSONEllipsoidTransformer: Add "transformObject" function tht offset the root mesh to avoid precision artifacts in render.
 
 ### Fixed
 - Replaced "wellknown" with "betterknown" package for WKT parsing for improved support.
