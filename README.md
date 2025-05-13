@@ -20,6 +20,8 @@ Uses [@turfjs/unkink-polygon](https://www.npmjs.com/package/@turf/unkink-polygon
 
 [Extruded GeoJSON Polygon](https://gkjohnson.github.io/three-geojson/example/bundle/extruded.html)
 
+[WKT Polygon](https://gkjohnson.github.io/three-geojson/example/bundle/wky.html)
+
 # Use
 
 ```js
