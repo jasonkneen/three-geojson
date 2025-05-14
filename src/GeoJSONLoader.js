@@ -19,6 +19,8 @@ function dedupeCoordinates( coords ) {
 
 	}
 
+	return coords;
+
 }
 
 // Extract the non-schema keys from the GeoJSON object
@@ -107,15 +109,6 @@ function getDimension( coordinates ) {
 
 }
 
-// Parse a coordinate to a three.js Vector3
-function parseCoordinate( arr ) {
-
-	return arr.length === 2 ?
-		new Vector3( ...arr, 0 ) :
-		new Vector3( ...arr );
-
-}
-
 // Traverse the parsed tree
 function traverse( object, callback ) {
 
@@ -157,7 +150,7 @@ function constructLineObject( lineData, options = {} ) {
 
 	// roll up all the vertices
 	let index = 0;
-	const posArray = new Float32Array( totalSegments * 3 );
+	const posArray = new Array( totalSegments * 3 );
 	lineData.forEach( vertices => {
 
 		const length = vertices.length;
@@ -183,7 +176,7 @@ function constructLineObject( lineData, options = {} ) {
 	} );
 
 	const line = new LineSegments();
-	line.geometry.setAttribute( 'position', new BufferAttribute( posArray, 3, false ) );
+	line.geometry.setAttribute( 'position', new BufferAttribute( new Float32Array( posArray ), 3, false ) );
 
 	return line;
 
@@ -218,10 +211,29 @@ function getPolygonMeshObject( options = {} ) {
 		flat = false,
 	} = options;
 
+	// unkink polygons function will fail if there are duplicate vertices
+	const clonedData = this.data.map( shape => shape.map( loop => loop.slice() ) );
+	clonedData.forEach( shape => {
+
+		shape.forEach( loop => dedupeCoordinates( loop ) );
+
+	} );
+
+	const data = unkinkPolygon( { type: 'MultiPolygon', coordinates: clonedData } )
+		.features.map( feature => feature.geometry.coordinates );
+
+	// remove last point
+	data.forEach( shape => {
+
+		shape.forEach( loop => loop.pop() );
+
+	} );
+
+
 	// calculate the total number of positions needed for the geometry
 	let totalVerts = 0;
-	const polygons = this.data.map( shape => shape.map( loop => loop.map( v => new Vector3( ...v ) ) ) );
-	polygons.forEach( shape => {
+	const vectorPolygons = data.map( shape => shape.map( loop => loop.map( v => new Vector3( ...v ) ) ) );
+	vectorPolygons.forEach( shape => {
 
 		const [ contour, ...holes ] = shape;
 		totalVerts += contour.length;
@@ -259,8 +271,8 @@ function getPolygonMeshObject( options = {} ) {
 	// construct the list of positions
 	let index = 0;
 	const halfOffset = totalVerts / 2;
-	const posArray = new Float32Array( totalVerts * 3 );
-	polygons.forEach( polygon => {
+	const posArray = new Array( totalVerts * 3 );
+	vectorPolygons.forEach( polygon => {
 
 		const [ shape, ...holes ] = polygon;
 		addVerts( shape );
@@ -292,7 +304,7 @@ function getPolygonMeshObject( options = {} ) {
 	// construct the list of indices
 	let indexArray = [];
 	let indexOffset = 0;
-	polygons.forEach( polygon => {
+	vectorPolygons.forEach( polygon => {
 
 		const [ shape, ...holes ] = polygon;
 		const indices = ShapeUtils.triangulateShape( shape, holes ).flatMap( f => f );
@@ -356,7 +368,7 @@ function getPolygonMeshObject( options = {} ) {
 
 	const mesh = new Mesh();
 	mesh.geometry.setIndex( indexArray );
-	mesh.geometry.setAttribute( 'position', new BufferAttribute( posArray, 3, false ) );
+	mesh.geometry.setAttribute( 'position', new BufferAttribute( new Float32Array( posArray ), 3, false ) );
 
 	if ( generateNormals ) {
 
@@ -498,7 +510,7 @@ export class GeoJSONLoader {
 
 			case 'Polygon': {
 
-				const result = {
+				return {
 					...getBase( object ),
 					feature,
 					data: [ object.coordinates ],
@@ -506,21 +518,14 @@ export class GeoJSONLoader {
 
 					getLineObject: getPolygonLineObject,
 					getMeshObject: getPolygonMeshObject,
+					OBJ: object,
 				};
-
-				result.data.forEach( shape => {
-
-					shape.forEach( loop => loop.pop() );
-
-				} );
-
-				return result;
 
 			}
 
 			case 'MultiPolygon': {
 
-				const result = {
+				return {
 					...getBase( object ),
 					feature,
 					data: object.coordinates,
@@ -528,15 +533,9 @@ export class GeoJSONLoader {
 
 					getLineObject: getPolygonLineObject,
 					getMeshObject: getPolygonMeshObject,
+					OBJ: object,
+
 				};
-
-				result.data.forEach( shape => {
-
-					shape.forEach( loop => loop.pop() );
-
-				} );
-
-				return result;
 
 			}
 
