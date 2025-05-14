@@ -7,7 +7,7 @@
 
 ![](./docs/banner.png)
 
-Three.js shape loaders for [GeoJSON](https://geojson.org/) ([readable html](https://stevage.github.io/geojson-spec/)) and [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry) formats. Supports generation of three.js line geometry in addition to flat and extruded tringulated meshes.
+Three.js shape loaders for [GeoJSON](https://geojson.org/) ([readable html](https://stevage.github.io/geojson-spec/)) and [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry) formats. Supports generation of three.js line geometry in addition to flat and extruded tringulated meshes. All generated geometry are transformed and centered using 64-bit Javascript floating point operations with meshes are offset to retain precision in GPU operations.
 
 Uses [@turfjs/unkink-polygon](https://www.npmjs.com/package/@turf/unkink-polygon) and [betterknown](https://github.com/placemark/betterknown) packages. World GeoJSON file courtesy of [geojson-maps](https://geojson-maps.kyd.au/).
 
