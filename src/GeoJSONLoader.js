@@ -146,8 +146,6 @@ function constructLineObject( lineData, options = {} ) {
 		offset = 0,
 	} = options;
 
-	const vecToArray = flat ? vecToArray2d : vecToArray3d;
-
 	// calculate total segments
 	let totalSegments = 0;
 	lineData.forEach( vertices => {
@@ -167,8 +165,17 @@ function constructLineObject( lineData, options = {} ) {
 		for ( let i = 0; i < segments; i ++ ) {
 
 			const ni = ( i + 1 ) % length;
-			vecToArray( vertices[ i ], posArray, index );
-			vecToArray( vertices[ ni ], posArray, index + 3 );
+
+			const v0 = vertices[ i ];
+			const v1 = vertices[ ni ];
+			posArray[ index + 0 ] = v0[ 0 ];
+			posArray[ index + 1 ] = v0[ 1 ];
+			posArray[ index + 2 ] = ( flat ? v0[ 2 ] || 0 : 0 ) + offset;
+
+			posArray[ index + 3 ] = v1[ 0 ];
+			posArray[ index + 4 ] = v1[ 1 ];
+			posArray[ index + 5 ] = ( flat ? v1[ 2 ] || 0 : 0 ) + offset;
+
 			index += 6;
 
 		}
@@ -180,30 +187,12 @@ function constructLineObject( lineData, options = {} ) {
 
 	return line;
 
-	function vecToArray3d( vec, array, indexOffset ) {
-
-		array[ indexOffset ] = vec.x;
-		array[ indexOffset + 1 ] = vec.y;
-		array[ indexOffset + 2 ] = vec.z + offset;
-
-	}
-
-	function vecToArray2d( vec, array, indexOffset ) {
-
-		array[ indexOffset ] = vec.x;
-		array[ indexOffset + 1 ] = vec.y;
-		array[ indexOffset + 2 ] = offset;
-
-	}
-
 }
 
 // Shape construction functions
 function getLineObject( options = {} ) {
 
-	const { data } = this;
-	const lines = Array.isArray( data ) ? data : [ data ];
-	return constructLineObject( lines.map( line => line.vertices ), {
+	return constructLineObject( this.data.flatMap( line => line ), {
 		loop: false,
 		...options,
  	} );
@@ -213,9 +202,7 @@ function getLineObject( options = {} ) {
 
 function getPolygonLineObject( options = {} ) {
 
-	const { data } = this;
-	const polygons = Array.isArray( data ) ? data : [ data ];
-	return constructLineObject( polygons.flatMap( poly => [ poly.shape, ...poly.holes ] ), {
+	return constructLineObject( this.data.flatMap( shape => shape ), {
 		loop: true,
 		...options,
 	} );
@@ -231,14 +218,13 @@ function getPolygonMeshObject( options = {} ) {
 		flat = false,
 	} = options;
 
-	const polygons = Array.isArray( this.data ) ? this.data : [ this.data ];
-
 	// calculate the total number of positions needed for the geometry
 	let totalVerts = 0;
-	polygons.forEach( polygon => {
+	const polygons = this.data.map( shape => shape.map( loop => loop.map( v => new Vector3( ...v ) ) ) );
+	polygons.forEach( shape => {
 
-		const { holes, shape } = polygon;
-		totalVerts += shape.length;
+		const [ contour, ...holes ] = shape;
+		totalVerts += contour.length;
 		holes.forEach( hole => totalVerts += hole.length );
 
 		// fix the shape orientations since the spec is a bit ambiguous here and old versions did not
@@ -276,7 +262,7 @@ function getPolygonMeshObject( options = {} ) {
 	const posArray = new Float32Array( totalVerts * 3 );
 	polygons.forEach( polygon => {
 
-		const { shape, holes } = polygon;
+		const [ shape, ...holes ] = polygon;
 		addVerts( shape );
 		holes.forEach( hole => addVerts( hole ) );
 
@@ -308,7 +294,7 @@ function getPolygonMeshObject( options = {} ) {
 	let indexOffset = 0;
 	polygons.forEach( polygon => {
 
-		const { shape, holes } = polygon;
+		const [ shape, ...holes ] = polygon;
 		const indices = ShapeUtils.triangulateShape( shape, holes ).flatMap( f => f );
 
 		let totalVerts = shape.length;
@@ -382,27 +368,6 @@ function getPolygonMeshObject( options = {} ) {
 
 	return mesh;
 
-
-}
-
-class Polygon {
-
-	constructor( shape = [], holes = [] ) {
-
-		this.shape = shape;
-		this.holes = holes;
-
-	}
-
-}
-
-class LineString {
-
-	constructor( vertices ) {
-
-		this.vertices = vertices;
-
-	}
 
 }
 
@@ -488,7 +453,7 @@ export class GeoJSONLoader {
 				return {
 					...getBase( object ),
 					feature,
-					data: [ parseCoordinate( object.coordinates ) ],
+					data: [ object.coordinates ],
 					dimension: getDimension( object.coordinates ),
 				};
 
@@ -499,7 +464,7 @@ export class GeoJSONLoader {
 				return {
 					...getBase( object ),
 					feature,
-					data: parseCoordinateArray( object.coordinates ),
+					data: object.coordinates,
 					dimension: getDimension( object.coordinates[ 0 ] ),
 				};
 
@@ -510,7 +475,7 @@ export class GeoJSONLoader {
 				return {
 					...getBase( object ),
 					feature,
-					data: [ new LineString( parseCoordinateArray( object.coordinates ) ) ],
+					data: [ object.coordinates ],
 					dimension: getDimension( object.coordinates[ 0 ] ),
 
 					getLineObject,
@@ -523,7 +488,7 @@ export class GeoJSONLoader {
 				return {
 					...getBase( object ),
 					feature,
-					data: object.coordinates.map( arr => new LineString( parseCoordinateArray( arr ) ) ),
+					data: object.coordinates,
 					dimension: getDimension( object.coordinates[ 0 ][ 0 ] ),
 
 					getLineObject,
@@ -531,49 +496,43 @@ export class GeoJSONLoader {
 
 			}
 
-			case 'Polygon':
+			case 'Polygon': {
+
+				const result = {
+					...getBase( object ),
+					feature,
+					data: [ object.coordinates ],
+					dimension: getDimension( object.coordinates[ 0 ][ 0 ] ),
+
+					getLineObject: getPolygonLineObject,
+					getMeshObject: getPolygonMeshObject,
+				};
+
+				result.data.forEach( shape => {
+
+					shape.forEach( loop => loop.pop() );
+
+				} );
+
+				return result;
+
+			}
+
 			case 'MultiPolygon': {
 
 				const result = {
 					...getBase( object ),
 					feature,
-					data: null,
+					data: object.coordinates,
 					dimension: getDimension( object.coordinates[ 0 ][ 0 ][ 0 ] ),
 
 					getLineObject: getPolygonLineObject,
 					getMeshObject: getPolygonMeshObject,
 				};
 
-				let coordinates;
-				if ( this.decomposePolygons ) {
+				result.data.forEach( shape => {
 
-					// unkink polygons function will fail if there are duplicate vertices
-					object.coordinates.forEach( coord => dedupeCoordinates( coord ) );
-
-					coordinates = unkinkPolygon( object ).features
-						.map( feature => feature.geometry.coordinates );
-
-				} else {
-
-					coordinates = object.type === 'Polygon' ? [ object.coordinates ] : object.coordinates;
-
-				}
-
-				if ( coordinates.length > 1 ) {
-
-					result.type = 'MultiPolygon';
-
-				}
-
-				result.data = coordinates.map( arr => {
-
-					const [ shape = [], holes = [] ] = parsePolygon( arr );
-
-					// remove the last vertex because it's duplicate and will cause triangulation issues
-					shape.pop();
-					holes.forEach( hole => hole.pop() );
-
-					return new Polygon( shape, holes );
+					shape.forEach( loop => loop.pop() );
 
 				} );
 
@@ -614,18 +573,6 @@ export class GeoJSONLoader {
 				};
 
 			}
-
-		}
-
-		function parseCoordinateArray( arr ) {
-
-			return arr.map( coord => parseCoordinate( coord ) );
-
-		}
-
-		function parsePolygon( arr ) {
-
-			return arr.map( loop => parseCoordinateArray( loop ) );
 
 		}
 
