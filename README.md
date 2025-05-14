@@ -92,7 +92,7 @@ Definition of a parsed set of point geometry.
 
 **LineString**
 
-Definition of a parsed set of line string geometry.
+Definition of a parsed set of line string geometry. `Ellipsoid` is from the 3d-tiles-renderer project.
 
 ```ts
 {
@@ -110,7 +110,7 @@ Definition of a parsed set of line string geometry.
 
 **Polygon**
 
-Definition of a parsed set of polygon geometry.
+Definition of a parsed set of polygon geometry. `Ellipsoid` is from the 3d-tiles-renderer project.
 
 ```ts
 {
