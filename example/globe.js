@@ -14,7 +14,8 @@ import {
 	AmbientLight,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GeoJSONLoader, GeoJSONEllipsoidTransformer } from '../src/index.js';
+import { GeoJSONLoader } from '../src/index.js';
+import { WGS84_ELLIPSOID } from '3d-tiles-renderer';
 
 // camera
 const camera = new PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 1000 );
@@ -56,8 +57,6 @@ new GeoJSONLoader()
 	.loadAsync( url )
 	.then( res => {
 
-		const transformer = new GeoJSONEllipsoidTransformer();
-
 		// add base globe color
 		const globeBase = new Mesh(
 			new SphereGeometry( 1, 100, 50 ),
@@ -72,14 +71,15 @@ new GeoJSONLoader()
 				polygonOffsetUnits: 1,
 			} ),
 		);
-		globeBase.scale.copy( transformer.ellipsoid.radius );
+		globeBase.scale.copy( WGS84_ELLIPSOID.radius );
 		group.add( globeBase );
 
 		// load the globe lines
 		res.polygons.forEach( geom => {
 
-			const line = geom.getLineObject();
-			transformer.transformObject( line );
+			const line = geom.getLineObject( {
+				ellipsoid: WGS84_ELLIPSOID,
+			} );
 			group.add( line );
 
 		} );
@@ -89,10 +89,11 @@ new GeoJSONLoader()
 			.flatMap( f => f.polygons )
 			.forEach( geom => {
 
-				const mesh = geom.getMeshObject( { thickness: 1e5 } );
+				const mesh = geom.getMeshObject( {
+					thickness: 1e5,
+					ellipsoid: WGS84_ELLIPSOID,
+				} );
 				mesh.material = new MeshStandardMaterial();
-
-				transformer.transformObject( mesh );
 				group.add( mesh );
 
 			} );

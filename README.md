@@ -170,37 +170,3 @@ Parses geojson content. Takes a raw or stringified json object.
 _extends GeoJSONLoader_
 
 Loads and converts the WKT file to GeoJSON using [mapbox's wellknown](wellknown parser](https://github.com/mapbox/wellknown)) package, then parses it using the GeoJSONLoader parse function.
-
-## GeoJSONEllipsoidTransformer
-
-Utility for transforming points and geometry from lat / lon values to an ellipsoidal projection.
-
-### constructor
-
-```js
-constructor( ellipsoid = WGS84_ELLIPSOID: Ellipsoid )
-```
-
-### transformPoint
-
-```js
-transformPoint( point: Vector3, target: Vector3 ): Vector3
-```
-
-Transforms a point in the GeoJSON lon, lat, height format to a cartesian value.
-
-### transformGeometry
-
-```js
-transformGeometry( geometry: BufferGeometry ): BufferGeometry
-```
-
-Transforms geometry position attribute buffer to cartesian frame in-place assuming the values are in the GeoJSON lon, lat, height format.
-
-### transformObject
-
-```js
-transformObject( object: Mesh | Line ): Mesh | Line
-```
-
-Transforms the given object with geometry, centers the geometry, and offsets the object transform to prevent precision-related rendering artifacts.

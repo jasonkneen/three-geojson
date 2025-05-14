@@ -1,5 +1,9 @@
-import { Box3, Vector3, ShapeUtils, BufferAttribute, Mesh, LineSegments } from 'three';
+import { Box3, Vector3, ShapeUtils, BufferAttribute, Mesh, LineSegments, MathUtils } from 'three';
 import { unkinkPolygon } from '@turf/unkink-polygon';
+import { WGS84_ELLIPSOID } from '3d-tiles-renderer';
+
+const _vec = /* @__PURE__ */ new Vector3();
+const _box = /* @__PURE__ */ new Box3();
 
 // Removes any duplicate vertices
 function dedupeCoordinates( coords ) {
@@ -137,6 +141,7 @@ function constructLineObject( lineData, options = {} ) {
 		flat = false,
 		loop = false,
 		offset = 0,
+		ellipsoid = null,
 	} = options;
 
 	// calculate total segments
@@ -175,10 +180,55 @@ function constructLineObject( lineData, options = {} ) {
 
 	} );
 
+	// transform the points to the ellipsoid
+	if ( ellipsoid ) {
+
+		transformToEllipsoid( posArray, ellipsoid );
+
+	}
+
+	// center the shape
 	const line = new LineSegments();
+	getCenter( posArray, line.position );
+	_vec.copy( line.position ).multiplyScalar( - 1 );
+	offsetPoints( posArray, _vec );
+
 	line.geometry.setAttribute( 'position', new BufferAttribute( new Float32Array( posArray ), 3, false ) );
 
 	return line;
+
+}
+
+function getCenter( arr, target ) {
+
+	_box.makeEmpty();
+
+	for ( let i = 0, l = arr.length; i < l; i += 3 ) {
+
+		_vec.x = arr[ i + 0 ];
+		_vec.y = arr[ i + 1 ];
+		_vec.z = arr[ i + 2 ];
+		_box.expandByPoint( _vec );
+
+	}
+
+	_box.getCenter( target );
+
+}
+
+function transformToEllipsoid( arr, ellipsoid ) {
+
+	for ( let i = 0, l = arr.length; i < l; i += 3 ) {
+
+		const lon = arr[ i + 0 ];
+		const lat = arr[ i + 1 ];
+		const alt = arr[ i + 2 ];
+		ellipsoid.getCartographicToPosition( lat * MathUtils.DEG2RAD, lon * MathUtils.DEG2RAD, alt, _vec );
+		arr[ i + 0 ] = _vec.x;
+		arr[ i + 1 ] = _vec.y;
+		arr[ i + 2 ] = _vec.z;
+
+	}
 
 }
 
@@ -209,6 +259,7 @@ function getPolygonMeshObject( options = {} ) {
 		offset = 0,
 		generateNormals = true,
 		flat = false,
+		ellipsoid = null,
 	} = options;
 
 	// unkink polygons function will fail if there are duplicate vertices
@@ -366,7 +417,19 @@ function getPolygonMeshObject( options = {} ) {
 
 	} );
 
+	// transform the points to the ellipsoid
+	if ( ellipsoid ) {
+
+		transformToEllipsoid( posArray, ellipsoid );
+
+	}
+
+	// center the geometry
 	const mesh = new Mesh();
+	getCenter( posArray, mesh.position );
+	_vec.copy( mesh.position ).multiplyScalar( - 1 );
+	offsetPoints( posArray, _vec );
+
 	mesh.geometry.setIndex( indexArray );
 	mesh.geometry.setAttribute( 'position', new BufferAttribute( new Float32Array( posArray ), 3, false ) );
 
@@ -380,6 +443,18 @@ function getPolygonMeshObject( options = {} ) {
 
 	return mesh;
 
+
+}
+
+function offsetPoints( arr, offset ) {
+
+	for ( let i = 0, l = arr.length; i < l; i += 3 ) {
+
+		arr[ i + 0 ] += offset.x;
+		arr[ i + 1 ] += offset.y;
+		arr[ i + 2 ] += offset.z;
+
+	}
 
 }
 
