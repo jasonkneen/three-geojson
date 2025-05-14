@@ -103,6 +103,7 @@ Definition of a parsed set of line string geometry.
   getLineObject( options: {
     flat = false: boolean,
 		offset = 0: number,
+		ellipsoid = null: Ellipsoid,
   } ): LineSegments,
 }
 ```
@@ -120,6 +121,7 @@ Definition of a parsed set of polygon geometry.
   getLineObject( options: {
     flat = false: boolean,
 		offset = 0: number,
+		ellipsoid = null: Ellipsoid,
   } ): LineSegments,
 
   getMeshObject( options: {
@@ -127,19 +129,12 @@ Definition of a parsed set of polygon geometry.
     offset = 0: number,
     generateNormals = true: boolean,
     flat = false: boolean,
+		ellipsoid = null: Ellipsoid,
   } ): Mesh,
 }
 ```
 
 ## GeoJSONLoader
-
-### decomposePolygons
-
-```js
-decomposePolygons = true: boolean
-```
-
-If true then self-intersecting polygons are decomposed into individual parts to enable triangulation.
 
 ### fetchOptions
 

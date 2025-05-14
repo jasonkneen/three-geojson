@@ -1,6 +1,5 @@
 import { Box3, Vector3, ShapeUtils, BufferAttribute, Mesh, LineSegments, MathUtils } from 'three';
 import { unkinkPolygon } from '@turf/unkink-polygon';
-import { WGS84_ELLIPSOID } from '3d-tiles-renderer';
 
 const _vec = /* @__PURE__ */ new Vector3();
 const _box = /* @__PURE__ */ new Box3();
@@ -466,7 +465,6 @@ export class GeoJSONLoader {
 	constructor() {
 
 		this.fetchOptions = {};
-		this.decomposePolygons = true;
 
 	}
 

@@ -5,8 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [0.0.5] - 2025.05.14
+### Fixed
+- Fixed case where shapes with less than 4 vertices after vertex deduplication would not triangulate.
+
 ### Changed
 - Removed GeoJSONEllipsoidTransformer in favor of object getter ellipsoid option.
+- Removed "decomposePolygons" option.
 
 ## [0.0.4] - 2025.05.14
 ### Added
