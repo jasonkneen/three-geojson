@@ -264,7 +264,7 @@ function getPolygonMeshObject( options = {} ) {
 	// unkink polygons function will fail if there are duplicate vertices
 	const clonedData = this.data
 		.map( shape => shape.map( loop => loop.slice() ) )
-		.map.forEach( shape => {
+		.map( shape => {
 
 			return shape.map( loop => dedupeCoordinates( loop ) ).filter( loop => loop.length > 3 );
 
