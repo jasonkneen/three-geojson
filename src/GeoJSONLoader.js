@@ -168,11 +168,11 @@ function constructLineObject( lineData, options = {} ) {
 			const v1 = vertices[ ni ];
 			posArray[ index + 0 ] = v0[ 0 ];
 			posArray[ index + 1 ] = v0[ 1 ];
-			posArray[ index + 2 ] = ( flat ? v0[ 2 ] || 0 : 0 ) + offset;
+			posArray[ index + 2 ] = ( flat ? 0 : v0[ 2 ] || 0 ) + offset;
 
 			posArray[ index + 3 ] = v1[ 0 ];
 			posArray[ index + 4 ] = v1[ 1 ];
-			posArray[ index + 5 ] = ( flat ? v1[ 2 ] || 0 : 0 ) + offset;
+			posArray[ index + 5 ] = ( flat ? 0 : v1[ 2 ] || 0 ) + offset;
 
 			index += 6;
 
@@ -263,12 +263,14 @@ function getPolygonMeshObject( options = {} ) {
 	} = options;
 
 	// unkink polygons function will fail if there are duplicate vertices
-	const clonedData = this.data.map( shape => shape.map( loop => loop.slice() ) );
-	clonedData.forEach( shape => {
+	const clonedData = this.data
+		.map( shape => shape.map( loop => loop.slice() ) )
+		.map.forEach( shape => {
 
-		shape.forEach( loop => dedupeCoordinates( loop ) );
+			return shape.map( loop => dedupeCoordinates( loop ) ).filter( loop => loop.length > 3 );
 
-	} );
+		} )
+		.filter( shape => shape.length !== 0 );
 
 	const data = unkinkPolygon( { type: 'MultiPolygon', coordinates: clonedData } )
 		.features.map( feature => feature.geometry.coordinates );
