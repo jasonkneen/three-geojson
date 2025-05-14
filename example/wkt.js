@@ -32,10 +32,10 @@ controls.minDistance = 1;
 controls.enableDamping = true;
 controls.autoRotate = true;
 
-const directionalLight = new DirectionalLight( 0xffffff, 2.5 );
+const directionalLight = new DirectionalLight( 0xffffff, 3.5 );
 directionalLight.position.set( 1, 2, 3 );
 
-const ambientLight = new AmbientLight( 0xffffff, 0.5 );
+const ambientLight = new AmbientLight( 0xffffff, 1 );
 scene.add( directionalLight, ambientLight );
 
 // construct geo group
@@ -60,14 +60,14 @@ new WKTLoader()
 					polygonOffset: true,
 					polygonOffsetFactor: 1,
 					polygonOffsetUnits: 1,
-					color: 0xfce4ec,
+					color: 0xffffff,
 				} );
 
-				const line = geom.getLineObject();
-				line.material.color.set( 0xf50057 );
+				const line = geom.getLineObject( { offset: - 0.5 } );
+				line.material.color.set( 0xffffff );
 
-				const line2 = geom.getLineObject( { offset: 1 } );
-				line2.material.color.set( 0xf50057 );
+				const line2 = geom.getLineObject( { offset: 1.5 } );
+				line2.material.color.set( 0xffffff );
 
 				group.add( mesh, line, line2 );
 
