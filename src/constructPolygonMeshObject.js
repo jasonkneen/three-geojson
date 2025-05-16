@@ -10,6 +10,9 @@ const _center = new /* @__PURE__ */ Vector3();
 
 function splitPolygon( polygon ) {
 
+	// get the dimension of the loops
+	const dimension = polygon[ 0 ][ 0 ].length;
+
 	// find the bounds of the shape
 	getPolygonBounds( polygon, _min, _max );
 	_center.addVectors( _min, _max ).multiplyScalar( 0.5 );
@@ -35,7 +38,7 @@ function splitPolygon( polygon ) {
 	} ) ) );
 
 	// Fix the 2d offset
-	if ( fixedPolygons.length > 1 && this.dimension > 2 ) {
+	if ( fixedPolygons.length > 1 && dimension > 2 ) {
 
 		fixedPolygons.forEach( shape => shape.forEach( loop => loop.forEach( coord => {
 
@@ -84,7 +87,7 @@ function cleanPolygons( polygons ) {
 
 		} );
 
-	return dedeupedPolygons.filter( shape => shape.length !== 0 );
+	return dedeupedPolygons.filter( polygon => polygon.length !== 0 );
 
 }
 
