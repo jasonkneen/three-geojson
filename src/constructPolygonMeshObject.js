@@ -2,6 +2,7 @@ import { Vector3, ShapeUtils, BufferAttribute, Mesh } from 'three';
 import { unkinkPolygon } from '@turf/unkink-polygon';
 import { dedupeCoordinates } from './GeoJSONShapeUtils.js';
 import { getCenter, offsetPoints, transformToEllipsoid } from './FlatVertexBufferUtils.js';
+import { triangulate } from './triangulate.js';
 
 const _vec = new /* @__PURE__ */ Vector3();
 const _min = new /* @__PURE__ */ Vector3();
@@ -159,6 +160,8 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 
 	} );
 
+	// vectorPolygons.splice( 0, Infinity );
+
 	// construct the list of positions
 	let index = 0;
 	const halfOffset = totalVerts / 2;
@@ -199,7 +202,10 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 	vectorPolygons.forEach( polygon => {
 
 		const [ contour, ...holes ] = polygon;
-		const indices = ShapeUtils.triangulateShape( contour, holes ).flatMap( f => f );
+
+		let indices = ShapeUtils.triangulateShape( contour, holes ).flatMap( f => f );
+		const indices2 = Array.from( triangulate( contour, holes ) );
+		indices = indices2.reverse();
 
 		let totalVerts = contour.length;
 		holes.forEach( hole => totalVerts += hole.length );

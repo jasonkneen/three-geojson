@@ -15,8 +15,10 @@
   "author": "Garrett Johnson <garrett.kjohnson@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@kninnug/constrainautor": "^4.0.0",
     "@turf/unkink-polygon": "^7.2.0",
-    "betterknown": "^1.0.5"
+    "betterknown": "^1.0.5",
+    "delaunator": "^5.0.1"
   },
   "devDependencies": {
     "3d-tiles-renderer": "^0.4.9",
