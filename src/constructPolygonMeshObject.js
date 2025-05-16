@@ -4,6 +4,73 @@ import { dedupeCoordinates } from './GeoJSONShapeUtils.js';
 import { getCenter, offsetPoints, transformToEllipsoid } from './FlatVertexBufferUtils.js';
 
 const _vec = new /* @__PURE__ */ Vector3();
+const _min = new /* @__PURE__ */ Vector3();
+const _max = new /* @__PURE__ */ Vector3();
+const _center = new /* @__PURE__ */ Vector3();
+
+function splitPolygon( polygon ) {
+
+	// find the bounds of the shape
+	getPolygonBounds( polygon, _min, _max );
+	_center.addVectors( _min, _max ).multiplyScalar( 0.5 );
+
+	// offset the shape to near zero to improve precision
+	polygon.forEach( loop => loop.forEach( coord => {
+
+		coord[ 0 ] -= _center.x;
+		coord[ 1 ] -= _center.y;
+
+	} ) );
+
+	// unkink the polygon
+	const fixedPolygons = unkinkPolygon( { type: 'Polygon', coordinates: polygon } )
+		.features.map( feature => feature.geometry.coordinates );
+
+	// Reset the centering
+	fixedPolygons.forEach( shape => shape.forEach( loop => loop.forEach( coord => {
+
+		coord[ 0 ] += _center.x;
+		coord[ 1 ] += _center.y;
+
+	} ) ) );
+
+	// Fix the 2d offset
+	if ( fixedPolygons.length > 1 && this.dimension > 2 ) {
+
+		fixedPolygons.forEach( shape => shape.forEach( loop => loop.forEach( coord => {
+
+			if ( coord.length === 2 ) {
+
+				coord[ 2 ] = _center.z;
+
+			}
+
+		} ) ) );
+
+	}
+
+	return fixedPolygons;
+
+}
+
+function getPolygonBounds( polygon, min, max ) {
+
+	min.setScalar( Infinity );
+	max.setScalar( - Infinity );
+	polygon.forEach( loop => loop.forEach( coord => {
+
+		const [ x, y, z = 0 ] = coord;
+		min.x = Math.min( min.x, x );
+		min.y = Math.min( min.y, y );
+		min.z = Math.min( min.z, z );
+
+		max.x = Math.max( max.x, x );
+		max.y = Math.max( max.y, y );
+		max.z = Math.max( max.z, z );
+
+	} ) );
+
+}
 
 function cleanPolygons( polygons ) {
 
@@ -48,9 +115,9 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 		ellipsoid = null,
 	} = options;
 
-	// unkink polygons function will fail if there are duplicate vertices
-	const cleanedPolygons = unkinkPolygon( { type: 'MultiPolygon', coordinates: cleanPolygons( polygons ) } )
-		.features.map( feature => feature.geometry.coordinates );
+	// clean up and filter the polygon shapes, then split the polygon into separate components
+	const cleanedPolygons = cleanPolygons( polygons )
+		.flatMap( polygon => splitPolygon( polygon ) );
 
 	// remove last point
 	cleanedPolygons.forEach( shape => {
