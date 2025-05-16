@@ -1,97 +1,10 @@
 import { Box3, Vector3, ShapeUtils, BufferAttribute, Mesh, LineSegments, MathUtils } from 'three';
 import { unkinkPolygon } from '@turf/unkink-polygon';
+import { dedupeCoordinates, getDimension, extractForeignKeys, traverse } from './GeoJSONShapeUtils.js';
+import { parseBounds } from './ParseUtils.js';
 
 const _vec = /* @__PURE__ */ new Vector3();
 const _box = /* @__PURE__ */ new Box3();
-
-// Removes any duplicate vertices
-function dedupeCoordinates( coords ) {
-
-	for ( let i = 0; i < coords.length - 1; i ++ ) {
-
-		const ni = ( i + 1 ) % coords.length;
-		const c = coords[ i ];
-		const nc = coords[ ni ];
-
-		if ( c[ 0 ] === nc[ 0 ] && c[ 1 ] === nc[ 1 ] ) {
-
-			coords.splice( ni, 1 );
-			i --;
-
-		}
-
-	}
-
-	return coords;
-
-}
-
-// Extract the non-schema keys from the GeoJSON object
-function extractForeignKeys( object ) {
-
-	const result = { ...object };
-	delete result.type;
-	delete result.bbox;
-
-	switch ( object.type ) {
-
-		case 'Point':
-		case 'MultiPoint':
-		case 'LineString':
-		case 'MultiLineString':
-		case 'Polygon':
-		case 'MultiPolygon':
-
-			delete result.coordinates;
-			break;
-
-		case 'GeometryCollection':
-
-			delete result.geometries;
-			break;
-
-		case 'Feature':
-
-			delete result.id;
-			delete result.properties;
-			delete result.geometry;
-			break;
-
-		case 'FeatureCollection':
-
-			delete result.features;
-			break;
-
-	}
-
-	return result;
-
-}
-
-// Parse the bounds to a three.js Box3
-function parseBounds( arr ) {
-
-	if ( ! arr ) {
-
-		return null;
-
-	} else if ( arr.length === 4 ) {
-
-		const box = new Box3();
-		box.min.set( arr[ 0 ], arr[ 1 ], 0 );
-		box.max.set( arr[ 2 ], arr[ 3 ], 0 );
-		return box;
-
-	} else if ( arr.length === 6 ) {
-
-		const box = new Box3();
-		box.min.set( arr[ 0 ], arr[ 1 ], arr[ 2 ] );
-		box.max.set( arr[ 3 ], arr[ 4 ], arr[ 5 ] );
-		return box;
-
-	}
-
-}
 
 // Get the base object definition for GeoJSON type
 function getBase( object ) {
@@ -105,40 +18,11 @@ function getBase( object ) {
 
 }
 
-// Retrieve the coordinate dimension
-function getDimension( coordinates ) {
-
-	return coordinates?.length ?? null;
-
-}
-
-// Traverse the parsed tree
-function traverse( object, callback ) {
-
-	callback( object );
-
-	switch ( object.type ) {
-
-		case 'GeometryCollection':
-		case 'FeatureCollection':
-
-			object.data.forEach( o => traverse( o, callback ) );
-			break;
-
-		case 'Feature':
-			traverse( object.data, callback );
-			break;
-
-	}
-
-}
-
 // Takes a set of vertex data and constructs a line segment
 function constructLineObject( lineData, options = {} ) {
 
 	const {
 		flat = false,
-		loop = false,
 		offset = 0,
 		ellipsoid = null,
 	} = options;
@@ -147,7 +31,7 @@ function constructLineObject( lineData, options = {} ) {
 	let totalSegments = 0;
 	lineData.forEach( vertices => {
 
-		const segments = loop ? vertices.length : vertices.length - 1;
+		const segments = vertices.length - 1;
 		totalSegments += segments * 2;
 
 	} );
@@ -158,7 +42,7 @@ function constructLineObject( lineData, options = {} ) {
 	lineData.forEach( vertices => {
 
 		const length = vertices.length;
-		const segments = loop ? length : length - 1;
+		const segments = length - 1;
 		for ( let i = 0; i < segments; i ++ ) {
 
 			const ni = ( i + 1 ) % length;
@@ -235,7 +119,6 @@ function transformToEllipsoid( arr, ellipsoid ) {
 function getLineObject( options = {} ) {
 
 	return constructLineObject( this.data.flatMap( line => line ), {
-		loop: false,
 		...options,
  	} );
 
@@ -245,7 +128,6 @@ function getLineObject( options = {} ) {
 function getPolygonLineObject( options = {} ) {
 
 	return constructLineObject( this.data.flatMap( shape => shape ), {
-		loop: true,
 		...options,
 	} );
 
@@ -488,6 +370,7 @@ export class GeoJSONLoader {
 		const features = [];
 		const geometries = [];
 
+		// find all features and geometries
 		traverse( root, object => {
 
 			if ( object.type !== 'FeatureCollection' && object.type !== 'GeometryCollection' ) {
@@ -512,6 +395,7 @@ export class GeoJSONLoader {
 
 		} );
 
+		// collect all shapes within each feature
 		features.forEach( feature => {
 
 			const { geometries } = feature;
