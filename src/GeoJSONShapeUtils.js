@@ -89,3 +89,32 @@ export function traverse( object, callback ) {
 	}
 
 }
+
+export function resampleLine( loop, minDistance ) {
+
+	const result = [];
+	for ( let i = 0, li = loop.length; i < li - 1; i ++ ) {
+
+		const ni = ( i + 1 ) % li;
+		const c = loop[ i ];
+		const nc = loop[ ni ];
+
+		const dx = nc[ 0 ] - c[ 0 ];
+		const dy = nc[ 1 ] - c[ 1 ];
+		const dist = Math.sqrt( dx ** 2 + dy ** 2 );
+		const steps = Math.ceil( dist / minDistance );
+
+		result.push( c );
+
+		const [ cx, cy ] = c;
+		for ( let j = 1; j < steps; j ++ ) {
+
+			result.push( [ cx + dx * j / steps, cy + dy * j / steps ] );
+
+		}
+
+	}
+
+	return result;
+
+}

@@ -104,6 +104,7 @@ Definition of a parsed set of line string geometry. `Ellipsoid` is from the 3d-t
     flat = false: boolean,
 		offset = 0: number,
 		ellipsoid = null: Ellipsoid,
+		resolution = null: number,
   } ): LineSegments,
 }
 ```
@@ -122,6 +123,7 @@ Definition of a parsed set of polygon geometry. `Ellipsoid` is from the 3d-tiles
     flat = false: boolean,
 		offset = 0: number,
 		ellipsoid = null: Ellipsoid,
+		resolution = null: number,
   } ): LineSegments,
 
   getMeshObject( options: {
@@ -130,6 +132,7 @@ Definition of a parsed set of polygon geometry. `Ellipsoid` is from the 3d-tiles
     generateNormals = true: boolean,
     flat = false: boolean,
 		ellipsoid = null: Ellipsoid,
+		resolution = null: number,
   } ): Mesh,
 }
 ```
