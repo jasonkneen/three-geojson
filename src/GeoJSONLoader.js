@@ -1,10 +1,11 @@
-import { Box3, Vector3, ShapeUtils, BufferAttribute, Mesh, LineSegments, MathUtils } from 'three';
+import { Vector3, ShapeUtils, BufferAttribute, Mesh } from 'three';
 import { unkinkPolygon } from '@turf/unkink-polygon';
 import { dedupeCoordinates, getDimension, extractForeignKeys, traverse } from './GeoJSONShapeUtils.js';
 import { parseBounds } from './ParseUtils.js';
+import { getCenter, offsetPoints, transformToEllipsoid } from './FlatVertexBufferUtils.js';
+import { constructLineObject } from './constructLineObject.js';
 
 const _vec = /* @__PURE__ */ new Vector3();
-const _box = /* @__PURE__ */ new Box3();
 
 // Get the base object definition for GeoJSON type
 function getBase( object ) {
@@ -15,103 +16,6 @@ function getBase( object ) {
 		data: null,
 		foreign: extractForeignKeys( object ),
 	};
-
-}
-
-// Takes a set of vertex data and constructs a line segment
-function constructLineObject( lineData, options = {} ) {
-
-	const {
-		flat = false,
-		offset = 0,
-		ellipsoid = null,
-	} = options;
-
-	// calculate total segments
-	let totalSegments = 0;
-	lineData.forEach( vertices => {
-
-		const segments = vertices.length - 1;
-		totalSegments += segments * 2;
-
-	} );
-
-	// roll up all the vertices
-	let index = 0;
-	const posArray = new Array( totalSegments * 3 );
-	lineData.forEach( vertices => {
-
-		const length = vertices.length;
-		const segments = length - 1;
-		for ( let i = 0; i < segments; i ++ ) {
-
-			const ni = ( i + 1 ) % length;
-
-			const v0 = vertices[ i ];
-			const v1 = vertices[ ni ];
-			posArray[ index + 0 ] = v0[ 0 ];
-			posArray[ index + 1 ] = v0[ 1 ];
-			posArray[ index + 2 ] = ( flat ? 0 : v0[ 2 ] || 0 ) + offset;
-
-			posArray[ index + 3 ] = v1[ 0 ];
-			posArray[ index + 4 ] = v1[ 1 ];
-			posArray[ index + 5 ] = ( flat ? 0 : v1[ 2 ] || 0 ) + offset;
-
-			index += 6;
-
-		}
-
-	} );
-
-	// transform the points to the ellipsoid
-	if ( ellipsoid ) {
-
-		transformToEllipsoid( posArray, ellipsoid );
-
-	}
-
-	// center the shape
-	const line = new LineSegments();
-	getCenter( posArray, line.position );
-	_vec.copy( line.position ).multiplyScalar( - 1 );
-	offsetPoints( posArray, _vec );
-
-	line.geometry.setAttribute( 'position', new BufferAttribute( new Float32Array( posArray ), 3, false ) );
-
-	return line;
-
-}
-
-function getCenter( arr, target ) {
-
-	_box.makeEmpty();
-
-	for ( let i = 0, l = arr.length; i < l; i += 3 ) {
-
-		_vec.x = arr[ i + 0 ];
-		_vec.y = arr[ i + 1 ];
-		_vec.z = arr[ i + 2 ];
-		_box.expandByPoint( _vec );
-
-	}
-
-	_box.getCenter( target );
-
-}
-
-function transformToEllipsoid( arr, ellipsoid ) {
-
-	for ( let i = 0, l = arr.length; i < l; i += 3 ) {
-
-		const lon = arr[ i + 0 ];
-		const lat = arr[ i + 1 ];
-		const alt = arr[ i + 2 ];
-		ellipsoid.getCartographicToPosition( lat * MathUtils.DEG2RAD, lon * MathUtils.DEG2RAD, alt, _vec );
-		arr[ i + 0 ] = _vec.x;
-		arr[ i + 1 ] = _vec.y;
-		arr[ i + 2 ] = _vec.z;
-
-	}
 
 }
 
@@ -311,7 +215,7 @@ function getPolygonMeshObject( options = {} ) {
 	const mesh = new Mesh();
 	getCenter( posArray, mesh.position );
 	_vec.copy( mesh.position ).multiplyScalar( - 1 );
-	offsetPoints( posArray, _vec );
+	offsetPoints( posArray, ..._vec );
 
 	mesh.geometry.setIndex( indexArray );
 	mesh.geometry.setAttribute( 'position', new BufferAttribute( new Float32Array( posArray ), 3, false ) );
@@ -326,18 +230,6 @@ function getPolygonMeshObject( options = {} ) {
 
 	return mesh;
 
-
-}
-
-function offsetPoints( arr, offset ) {
-
-	for ( let i = 0, l = arr.length; i < l; i += 3 ) {
-
-		arr[ i + 0 ] += offset.x;
-		arr[ i + 1 ] += offset.y;
-		arr[ i + 2 ] += offset.z;
-
-	}
 
 }
 
