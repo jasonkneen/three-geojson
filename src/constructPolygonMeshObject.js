@@ -5,6 +5,39 @@ import { getCenter, offsetPoints, transformToEllipsoid } from './FlatVertexBuffe
 
 const _vec = new /* @__PURE__ */ Vector3();
 
+function cleanPolygons( polygons ) {
+
+	// clone each polygon with deduped set of vertices
+	const dedeupedPolygons = polygons
+		.map( polygon => {
+
+			return polygon
+				.map( loop => dedupeCoordinates( loop.slice() ) )
+				.filter( loop => loop.length > 3 );
+
+		} );
+
+	return dedeupedPolygons.filter( shape => shape.length !== 0 );
+
+}
+
+function countVerticesInPolygons( polygons ) {
+
+	let total = 0;
+	polygons.forEach( polygon => {
+
+		polygon.forEach( loop => {
+
+			total += loop.length;
+
+		} );
+
+	} );
+
+	return total;
+
+}
+
 export function constructPolygonMeshObject( polygons, options = {} ) {
 
 	const {
@@ -16,40 +49,34 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 	} = options;
 
 	// unkink polygons function will fail if there are duplicate vertices
-	const clonedData = polygons
-		.map( shape => shape.map( loop => loop.slice() ) )
-		.map( shape => {
-
-			return shape.map( loop => dedupeCoordinates( loop ) ).filter( loop => loop.length > 3 );
-
-		} )
-		.filter( shape => shape.length !== 0 );
-
-	const data = unkinkPolygon( { type: 'MultiPolygon', coordinates: clonedData } )
+	const cleanedPolygons = unkinkPolygon( { type: 'MultiPolygon', coordinates: cleanPolygons( polygons ) } )
 		.features.map( feature => feature.geometry.coordinates );
 
 	// remove last point
-	data.forEach( shape => {
+	cleanedPolygons.forEach( shape => {
 
 		shape.forEach( loop => loop.pop() );
 
 	} );
 
-
 	// calculate the total number of positions needed for the geometry
-	let totalVerts = 0;
-	const vectorPolygons = data.map( shape => shape.map( loop => loop.map( v => new Vector3( ...v ) ) ) );
-	vectorPolygons.forEach( shape => {
+	let totalVerts = countVerticesInPolygons( cleanedPolygons );
+	if ( thickness > 0 ) {
 
-		const [ contour, ...holes ] = shape;
-		totalVerts += contour.length;
-		holes.forEach( hole => totalVerts += hole.length );
+		totalVerts *= 2;
+
+	}
+
+	// construct a series of Vector3 loops and correct the winding order
+	const vectorPolygons = cleanedPolygons.map( shape => shape.map( loop => loop.map( v => new Vector3( ...v ) ) ) );
+	vectorPolygons.forEach( polygon => {
 
 		// fix the shape orientations since the spec is a bit ambiguous here and old versions did not
 		// specify winding order
-		if ( ! ShapeUtils.isClockWise( shape ) ) {
+		const [ contour, ...holes ] = polygon;
+		if ( ! ShapeUtils.isClockWise( contour ) ) {
 
-			shape.reverse();
+			contour.reverse();
 
 		}
 
@@ -65,37 +92,29 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 
 	} );
 
-	if ( thickness > 0 ) {
-
-		totalVerts *= 2;
-
-	}
-
-	// scratch vector
-	const temp = new Vector3();
-
 	// construct the list of positions
 	let index = 0;
 	const halfOffset = totalVerts / 2;
 	const posArray = new Array( totalVerts * 3 );
 	vectorPolygons.forEach( polygon => {
 
-		const [ shape, ...holes ] = polygon;
-		addVerts( shape );
+		const [ contour, ...holes ] = polygon;
+		addVerts( contour );
 		holes.forEach( hole => addVerts( hole ) );
 
-		function addVerts( verts ) {
+		function addVerts( loop ) {
 
-			for ( let i = 0, l = verts.length; i < l; i ++ ) {
+			// add all vertices in the tool to the subsequent section of the array
+			for ( let i = 0, l = loop.length; i < l; i ++ ) {
 
-				temp.copy( verts[ i ] );
-				temp.z = flat ? offset : temp.z + offset;
-				temp.toArray( posArray, index );
+				_vec.copy( loop[ i ] );
+				_vec.z = flat ? offset : _vec.z + offset;
+				_vec.toArray( posArray, index );
 
 				if ( thickness > 0 ) {
 
-					temp.z += thickness;
-					temp.toArray( posArray, index + 3 * halfOffset );
+					_vec.z += thickness;
+					_vec.toArray( posArray, index + 3 * halfOffset );
 
 				}
 
@@ -112,13 +131,13 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 	let indexOffset = 0;
 	vectorPolygons.forEach( polygon => {
 
-		const [ shape, ...holes ] = polygon;
-		const indices = ShapeUtils.triangulateShape( shape, holes ).flatMap( f => f );
+		const [ contour, ...holes ] = polygon;
+		const indices = ShapeUtils.triangulateShape( contour, holes ).flatMap( f => f );
 
-		let totalVerts = shape.length;
+		let totalVerts = contour.length;
 		holes.forEach( hole => totalVerts += hole.length );
 
-		// caps
+		// construct caps
 		for ( let i = 0, l = indices.length; i < l; i += 3 ) {
 
 			if ( thickness > 0 ) {
@@ -141,11 +160,11 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 
 		}
 
-		// sides
+		// construct sides
 		if ( thickness > 0 ) {
 
 			let indexOffset2 = indexOffset;
-			addSides( shape );
+			addSides( contour );
 			holes.forEach( hole => addSides( hole ) );
 
 			function addSides( verts ) {
@@ -197,6 +216,5 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 	}
 
 	return mesh;
-
 
 }
