@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.0.7] - Unreleased
 ### Fixed
--
+- Error that could be thrown the processing polygons.
 
 ### Added
 - Support for the "resolution" option to resample edges.
