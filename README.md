@@ -15,6 +15,7 @@ Some key features supported by this project:
 - Support for detecting and fixing self-intersecting polygons so they tringulate correctly.
 - Uses constrained delaunay triangulation for correct, high quality triangulation and support for inner vertices.
 - Smooth surface normals are generated for ellipsoid-projected shapes.
+- Outputs centered geometry with and matrix transform offset to avoid preceision-related artifacts on CPU and GPU when processing high-detail shapes.
 
 > [!NOTE]
 > This project is not hosted on npm and must be installed via Github repository.
