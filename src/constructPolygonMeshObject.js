@@ -51,13 +51,12 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 	const {
 		thickness = 0,
 		offset = 0,
-		generateNormals = true,
 		flat = false,
 		ellipsoid = null,
 		resolution = null,
 	} = options;
 
-	// clean up, filter, and ensure winding order of the polygon shapes,
+	// clone, clean up, filter, and ensure winding order of the polygon shapes,
 	// then split the polygon into separate components
 	let cleanedPolygons = polygons
 		.map( polygon => polygon.map( loop => loop.map( coord => coord.slice() ) ) )
