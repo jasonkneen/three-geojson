@@ -45,8 +45,9 @@ function findTriangleWithEdge( triangles, edge ) {
 
 }
 
-export function triangulate( contour, holes ) {
+export function triangulate( contour, holes, extraPoints = [] ) {
 
+	// retrieve the set of constrained indices
 	let offset = 0;
 	const constrainedIndices = [];
 	getLoopEdges( contour, offset, constrainedIndices );
@@ -59,12 +60,17 @@ export function triangulate( contour, holes ) {
 
 	} );
 
+	// construct the set of points
+	const points = [ ...contour, ...holes.flatMap( hole => hole ), ...extraPoints ];
+	const points2d = points.map( coord => [ coord[ 0 ], coord[ 1 ] ] );
 
-	const points = [ ...contour, ...holes.flatMap( hole => hole ) ].map( coord => [ coord.x, coord.y ] );
-	const delaunay = Delaunator.from( points );
+	// construct the triangulation
+	const delaunay = Delaunator.from( points2d );
 	const con = new Constrainautor( delaunay );
 	con.constrainAll( constrainedIndices );
 
+	// find the triangles that make up the given polygon
+	// TODO: move to a separate function
 	const result = [];
 	const { triangles, halfedges } = delaunay;
 	const startTri = findTriangleWithEdge( triangles, constrainedIndices[ 0 ] );
@@ -133,15 +139,10 @@ export function triangulate( contour, holes ) {
 
 	}
 
-	return result;
-
-
-	return [
-		triangles[ startTri * 3 + 0 ],
-		triangles[ startTri * 3 + 1 ],
-		triangles[ startTri * 3 + 2 ],
-	];
-
-	return delaunay.triangles;
+	return {
+		indices: result,
+		edges: constrainedIndices,
+		points,
+	};
 
 }

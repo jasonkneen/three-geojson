@@ -1,111 +1,60 @@
-import { Vector3, ShapeUtils, BufferAttribute, Mesh } from 'three';
-import { unkinkPolygon } from '@turf/unkink-polygon';
-import { dedupeCoordinates, resampleLine } from './GeoJSONShapeUtils.js';
-import { getCenter, offsetPoints, transformToEllipsoid } from './FlatVertexBufferUtils.js';
+import { BufferAttribute, Mesh, Vector3 } from 'three';
+import { cleanPolygons, getPolygonBounds, splitPolygon } from './PolygonUtils.js';
+import { calculateAngleSum, resampleLine } from './GeoJSONShapeUtils.js';
 import { triangulate } from './triangulate.js';
+import { getCenter, offsetPoints, transformToEllipsoid } from './FlatVertexBufferUtils.js';
 
 const _vec = new /* @__PURE__ */ Vector3();
 const _min = new /* @__PURE__ */ Vector3();
 const _max = new /* @__PURE__ */ Vector3();
-const _center = new /* @__PURE__ */ Vector3();
 
-function splitPolygon( polygon ) {
+function pointIsInPolygon( polygon, x, y ) {
 
-	// get the dimension of the loops
-	const dimension = polygon[ 0 ][ 0 ].length;
+	// TODO: check distnce to edges
 
-	// find the bounds of the shape
-	getPolygonBounds( polygon, _min, _max );
-	_center.addVectors( _min, _max ).multiplyScalar( 0.5 );
+	const [ contour, ...holes ] = polygon;
+	const isInContour = calculateAngleSum( contour, x, y ) > 3.14;
+	if ( ! isInContour ) {
 
-	// offset the shape to near zero to improve precision
-	polygon.forEach( loop => loop.forEach( coord => {
-
-		coord[ 0 ] -= _center.x;
-		coord[ 1 ] -= _center.y;
-
-	} ) );
-
-	// unkink the polygon
-	const fixedPolygons = unkinkPolygon( { type: 'Polygon', coordinates: polygon } )
-		.features.map( feature => feature.geometry.coordinates );
-
-	// Reset the centering
-	fixedPolygons.forEach( shape => shape.forEach( loop => loop.forEach( coord => {
-
-		coord[ 0 ] += _center.x;
-		coord[ 1 ] += _center.y;
-
-	} ) ) );
-
-	// Fix the 2d offset
-	if ( fixedPolygons.length > 1 && dimension > 2 ) {
-
-		fixedPolygons.forEach( shape => shape.forEach( loop => loop.forEach( coord => {
-
-			if ( coord.length === 2 ) {
-
-				coord[ 2 ] = _center.z;
-
-			}
-
-		} ) ) );
+		return false;
 
 	}
 
-	return fixedPolygons;
+	for ( let i = 0, l = holes.length; i < l; i ++ ) {
+
+		const isInHole = calculateAngleSum( holes[ i ], x, y ) > 3.14;
+		if ( isInHole ) {
+
+			return false;
+
+		}
+
+	}
+
+	return true;
 
 }
 
-function getPolygonBounds( polygon, min, max ) {
+function getInnerPoints( polygon, resolution ) {
 
-	min.setScalar( Infinity );
-	max.setScalar( - Infinity );
-	polygon.forEach( loop => loop.forEach( coord => {
+	getPolygonBounds( polygon, _min, _max );
 
-		const [ x, y, z = 0 ] = coord;
-		min.x = Math.min( min.x, x );
-		min.y = Math.min( min.y, y );
-		min.z = Math.min( min.z, z );
+	const result = [];
+	for ( let x = _min.x, lx = _max.x; x < lx; x += resolution ) {
 
-		max.x = Math.max( max.x, x );
-		max.y = Math.max( max.y, y );
-		max.z = Math.max( max.z, z );
+		for ( let y = _min.y, ly = _max.y; y < ly; y += resolution ) {
 
-	} ) );
+			if ( pointIsInPolygon( polygon, x, y ) ) {
 
-}
+				result.push( [ x, y ] );
 
-function cleanPolygons( polygons ) {
+			}
 
-	// clone each polygon with deduped set of vertices
-	const dedeupedPolygons = polygons
-		.map( polygon => {
+		}
 
-			return polygon
-				.map( loop => dedupeCoordinates( loop.slice() ) )
-				.filter( loop => loop.length > 3 );
+	}
 
-		} );
-
-	return dedeupedPolygons.filter( polygon => polygon.length !== 0 );
-
-}
-
-function countVerticesInPolygons( polygons ) {
-
-	let total = 0;
-	polygons.forEach( polygon => {
-
-		polygon.forEach( loop => {
-
-			total += loop.length;
-
-		} );
-
-	} );
-
-	return total;
+	return result;
 
 }
 
@@ -120,130 +69,105 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 		resolution = null,
 	} = options;
 
-	// clean up and filter the polygon shapes, then split the polygon into separate components
-	let cleanedPolygons = cleanPolygons( polygons )
+	// clean up, filter, and ensure winding order of the polygon shapes,
+	// then split the polygon into separate components
+	const cleanedPolygons = cleanPolygons( polygons )
 		.flatMap( polygon => splitPolygon( polygon ) );
 
-	// resample the polygon edge
-	if ( resolution !== null ) {
+	const triangulations = cleanedPolygons.map( polygon => {
 
-		cleanedPolygons = cleanedPolygons
-			.map( polygon => polygon.map( loop => {
+		let innerPoints = [];
+		if ( resolution !== null ) {
+
+			innerPoints = getInnerPoints( polygon, resolution );
+
+			polygon = polygon.map( loop => {
 
 				return resampleLine( loop, resolution );
 
-			} ) );
+			} );
 
-	}
+		}
 
-	// remove last point
-	cleanedPolygons.forEach( shape => {
+		// remove the last point since it's redundant
+		polygon.forEach( loop => {
 
-		shape.forEach( loop => loop.pop() );
+			loop.pop();
+
+		} );
+
+		const [ contour, ...holes ] = polygon;
+		return triangulate( contour, holes, innerPoints );
 
 	} );
 
-	// calculate the total number of positions needed for the geometry
-	let totalVerts = countVerticesInPolygons( cleanedPolygons );
+	// calculate the total number of vertices needed
+	let totalVerts = 0;
+	triangulations.forEach( ( { points } ) => {
+
+		totalVerts += points.length;
+
+	} );
+
 	if ( thickness > 0 ) {
 
 		totalVerts *= 2;
 
 	}
 
-	// construct a series of Vector3 loops and correct the winding order
-	const vectorPolygons = cleanedPolygons.map( shape => shape.map( loop => loop.map( v => new Vector3( ...v ) ) ) );
-	vectorPolygons.forEach( polygon => {
-
-		// fix the shape orientations since the spec is a bit ambiguous here and old versions did not
-		// specify winding order
-		const [ contour, ...holes ] = polygon;
-		if ( ! ShapeUtils.isClockWise( contour ) ) {
-
-			contour.reverse();
-
-		}
-
-		holes.forEach( hole => {
-
-			if ( ShapeUtils.isClockWise( hole ) ) {
-
-				hole.reverse();
-
-			}
-
-		} );
-
-	} );
-
-	// vectorPolygons.splice( 0, Infinity );
-
-	// construct the list of positions
+	// collect the points
 	let index = 0;
 	const halfOffset = totalVerts / 2;
 	const posArray = new Array( totalVerts * 3 );
-	vectorPolygons.forEach( polygon => {
+	triangulations.forEach( ( { points } ) => {
 
-		const [ contour, ...holes ] = polygon;
-		addVerts( contour );
-		holes.forEach( hole => addVerts( hole ) );
+		// add all vertices in the tool to the subsequent section of the array
+		for ( let i = 0, l = points.length; i < l; i ++ ) {
 
-		function addVerts( loop ) {
+			const p = points[ i ];
+			_vec.x = p[ 0 ];
+			_vec.y = p[ 1 ];
+			_vec.z = p[ 2 ] || 0;
 
-			// add all vertices in the tool to the subsequent section of the array
-			for ( let i = 0, l = loop.length; i < l; i ++ ) {
+			_vec.z = flat ? offset : _vec.z + offset;
+			_vec.toArray( posArray, index );
 
-				_vec.copy( loop[ i ] );
-				_vec.z = flat ? offset : _vec.z + offset;
-				_vec.toArray( posArray, index );
+			if ( thickness > 0 ) {
 
-				if ( thickness > 0 ) {
-
-					_vec.z += thickness;
-					_vec.toArray( posArray, index + 3 * halfOffset );
-
-				}
-
-				index += 3;
+				_vec.z += thickness;
+				_vec.toArray( posArray, index + 3 * halfOffset );
 
 			}
+
+			index += 3;
 
 		}
 
 	} );
 
 	// construct the list of indices
-	let indexArray = [];
+	const indexArray = [];
 	let indexOffset = 0;
-	vectorPolygons.forEach( polygon => {
-
-		const [ contour, ...holes ] = polygon;
-
-		let indices = ShapeUtils.triangulateShape( contour, holes ).flatMap( f => f );
-		const indices2 = Array.from( triangulate( contour, holes ) );
-		indices = indices2.reverse();
-
-		let totalVerts = contour.length;
-		holes.forEach( hole => totalVerts += hole.length );
+	triangulations.forEach( ( { indices, points, edges } ) => {
 
 		// construct caps
 		for ( let i = 0, l = indices.length; i < l; i += 3 ) {
 
 			if ( thickness > 0 ) {
 
-				indexArray.push( indices[ i + 2 ] + indexOffset );
-				indexArray.push( indices[ i + 1 ] + indexOffset );
 				indexArray.push( indices[ i + 0 ] + indexOffset );
+				indexArray.push( indices[ i + 1 ] + indexOffset );
+				indexArray.push( indices[ i + 2 ] + indexOffset );
 
-				indexArray.push( indices[ i + 0 ] + indexOffset + halfOffset );
-				indexArray.push( indices[ i + 1 ] + indexOffset + halfOffset );
 				indexArray.push( indices[ i + 2 ] + indexOffset + halfOffset );
+				indexArray.push( indices[ i + 1 ] + indexOffset + halfOffset );
+				indexArray.push( indices[ i + 0 ] + indexOffset + halfOffset );
 
 			} else {
 
-				indexArray.push( indices[ i + 0 ] + indexOffset );
-				indexArray.push( indices[ i + 1 ] + indexOffset );
 				indexArray.push( indices[ i + 2 ] + indexOffset );
+				indexArray.push( indices[ i + 1 ] + indexOffset );
+				indexArray.push( indices[ i + 0 ] + indexOffset );
 
 			}
 
@@ -252,31 +176,22 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 		// construct sides
 		if ( thickness > 0 ) {
 
-			let indexOffset2 = indexOffset;
-			addSides( contour );
-			holes.forEach( hole => addSides( hole ) );
+			// TODO: holes need to be added in reverse here?
+			for ( let i = 0, l = edges.length; i < l; i ++ ) {
 
-			function addSides( verts ) {
-
-				for ( let i = 0, l = verts.length; i < l; i ++ ) {
-
-					const i0 = indexOffset2 + i;
-					const i1 = indexOffset2 + ( i + 1 ) % l;
-					const i2 = i0 + halfOffset;
-					const i3 = i1 + halfOffset;
-
-					indexArray.push( i0, i2, i1 );
-					indexArray.push( i1, i2, i3 );
-
-				}
-
-				indexOffset2 += verts.length;
+				const edge = edges[ i ];
+				const i0 = edge[ 0 ] + indexOffset;
+				const i1 = edge[ 1 ] + indexOffset;
+				const i2 = i0 + halfOffset;
+				const i3 = i1 + halfOffset;
+				indexArray.push( i0, i2, i1 );
+				indexArray.push( i1, i2, i3 );
 
 			}
 
 		}
 
-		indexOffset += totalVerts;
+		indexOffset += points.length;
 
 	} );
 
