@@ -1,5 +1,5 @@
 import { BufferAttribute, Mesh, Vector3 } from 'three';
-import { cleanPolygons, getPolygonBounds, splitPolygon } from './PolygonUtils.js';
+import { correctPolygonWinding, dedupePolygonPoints, getPolygonBounds, splitPolygon } from './PolygonUtils.js';
 import { calculateAngleSum, resampleLine } from './GeoJSONShapeUtils.js';
 import { triangulate } from './triangulate.js';
 import { getCenter, offsetPoints, transformToEllipsoid } from './FlatVertexBufferUtils.js';
@@ -71,8 +71,9 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 
 	// clean up, filter, and ensure winding order of the polygon shapes,
 	// then split the polygon into separate components
-	const cleanedPolygons = cleanPolygons( polygons )
-		.flatMap( polygon => splitPolygon( polygon ) );
+	let cleanedPolygons = dedupePolygonPoints( polygons )
+		.flatMap( polygon => splitPolygon( polygon ) )
+		.map( polygon => correctPolygonWinding( polygon ) );
 
 	const triangulations = cleanedPolygons.map( polygon => {
 

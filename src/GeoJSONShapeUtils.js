@@ -116,6 +116,8 @@ export function resampleLine( loop, minDistance ) {
 
 	}
 
+	result.push( loop[ loop.length - 1 ] );
+
 	return result;
 
 }

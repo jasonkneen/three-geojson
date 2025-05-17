@@ -73,7 +73,30 @@ export function getPolygonBounds( polygon, min, max ) {
 
 }
 
-export function cleanPolygons( polygons ) {
+export function correctPolygonWinding( polygon ) {
+
+	const [ contour, ...holes ] = polygon;
+	if ( ! isClockWise( contour ) ) {
+
+		contour.reverse();
+
+	}
+
+	holes.forEach( hole => {
+
+		if ( isClockWise( hole ) ) {
+
+			hole.reverse();
+
+		}
+
+	} );
+
+	return polygon;
+
+}
+
+export function dedupePolygonPoints( polygons ) {
 
 	// clone each polygon with deduped set of vertices
 	const result = polygons
@@ -82,28 +105,6 @@ export function cleanPolygons( polygons ) {
 			return polygon
 				.map( loop => dedupeCoordinates( loop.slice() ) )
 				.filter( loop => loop.length > 3 );
-
-		} )
-		.map( polygon => {
-
-			const [ contour, ...holes ] = polygon;
-			if ( ! isClockWise( contour ) ) {
-
-				contour.reverse();
-
-			}
-
-			holes.forEach( hole => {
-
-				if ( isClockWise( hole ) ) {
-
-					hole.reverse();
-
-				}
-
-			} );
-
-			return polygon;
 
 		} )
 		.filter( polygon => {
