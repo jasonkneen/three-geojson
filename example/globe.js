@@ -57,6 +57,16 @@ new GeoJSONLoader()
 	.loadAsync( url )
 	.then( res => {
 
+		const queryParams = new URLSearchParams( location.search );
+		const country = queryParams.get( 'country' ) || 'Japan';
+		let thickness = parseFloat( queryParams.get( 'thickness' ) );
+		let resolution = parseFloat( queryParams.get( 'resolution' ) ) || 5;
+		if ( thickness !== 0 ) {
+
+			thickness = thickness || ( 1e5 * 0.5 );
+
+		}
+
 		// add base globe color
 		const globeBase = new Mesh(
 			new SphereGeometry( 1, 100, 50 ),
@@ -79,19 +89,21 @@ new GeoJSONLoader()
 
 			const line = geom.getLineObject( {
 				ellipsoid: WGS84_ELLIPSOID,
+				resolution,
 			} );
 			group.add( line );
 
 		} );
 
 		res.features
-			.filter( f => /Japan/.test( f.properties.name ) )
+			.filter( f => new RegExp( country ).test( f.properties.name ) )
 			.flatMap( f => f.polygons )
 			.forEach( geom => {
 
 				const mesh = geom.getMeshObject( {
-					thickness: 1e5,
 					ellipsoid: WGS84_ELLIPSOID,
+					thickness,
+					resolution,
 				} );
 				mesh.material = new MeshStandardMaterial();
 				group.add( mesh );

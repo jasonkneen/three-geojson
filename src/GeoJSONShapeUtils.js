@@ -90,6 +90,7 @@ export function traverse( object, callback ) {
 
 }
 
+// takes the provided line and resamples it so the segments are at most minDistance long
 export function resampleLine( loop, minDistance ) {
 
 	const result = [];
@@ -115,6 +116,64 @@ export function resampleLine( loop, minDistance ) {
 
 	}
 
+	result.push( loop[ loop.length - 1 ] );
+
 	return result;
+
+}
+
+// calculates the area of the given loop
+export function calculateArea( loop ) {
+
+	const n = loop.length;
+	let a = 0.0;
+
+	for ( let p = n - 1, q = 0; q < n; p = q ++ ) {
+
+		a += loop[ p ][ 0 ] * loop[ q ][ 1 ] - loop[ q ][ 0 ] * loop[ p ][ 1 ];
+
+	}
+
+	return a * 0.5;
+
+}
+
+// returns whether the given loop is clockwise or not
+export function isClockWise( loop ) {
+
+	return calculateArea( loop ) < 0;
+
+}
+
+// returns the angle sum of all the segments relative to the given point
+export function calculateAngleSum( loop, x, y ) {
+
+	let angleSum = 0;
+	for ( let i = 0, l = loop.length; i < l; i ++ ) {
+
+		const ni = ( i + 1 ) % l;
+
+		const c0 = loop[ i ];
+		const c1 = loop[ ni ];
+
+		let dx0 = c0[ 0 ] - x;
+		let dy0 = c0[ 1 ] - y;
+		let dx1 = c1[ 0 ] - x;
+		let dy1 = c1[ 1 ] - y;
+
+		const l0 = Math.sqrt( dx0 ** 2 + dy0 ** 2 );
+		const l1 = Math.sqrt( dx1 ** 2 + dy1 ** 2 );
+
+		dx0 /= l0;
+		dy0 /= l0;
+
+		dx1 /= l1;
+		dy1 /= l1;
+
+		angleSum += Math.atan2( dx0 * dy1 - dy0 * dx1, dx0 * dx1 + dy0 * dy1 );
+
+	}
+
+	return Math.abs( angleSum );
 
 }
