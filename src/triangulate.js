@@ -1,7 +1,7 @@
 import Delaunator from 'delaunator';
 import Constrainautor from '@kninnug/constrainautor';
 
-function getLoopEdges( loop, offset, target = [] ) {
+export function getLoopEdges( loop, offset, target = [] ) {
 
 	loop.forEach( ( e, i ) => {
 

@@ -140,6 +140,8 @@ Definition of a parsed set of polygon geometry. `Ellipsoid` is from the 3d-tiles
     flat = false: boolean,
     ellipsoid = null: Ellipsoid,
     resolution = null: number,
+    useEarcut = false: boolen,
+    detectSelfIntersection = true: boolean,
   } ): Mesh,
 }
 ```

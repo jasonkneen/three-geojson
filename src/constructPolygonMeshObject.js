@@ -1,7 +1,7 @@
-import { BufferAttribute, MathUtils, Mesh, Vector3 } from 'three';
+import { BufferAttribute, Controls, MathUtils, Mesh, ShapeUtils, Vector2, Vector3 } from 'three';
 import { correctPolygonWinding, dedupePolygonPoints, getPolygonBounds, splitPolygon } from './PolygonUtils.js';
 import { resampleLine } from './GeoJSONShapeUtils.js';
-import { triangulate } from './triangulate.js';
+import { getLoopEdges, triangulate } from './triangulate.js';
 import { getCenter, offsetPoints, transformToEllipsoid } from './FlatVertexBufferUtils.js';
 
 const _vec = new /* @__PURE__ */ Vector3();
@@ -119,15 +119,25 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 		flat = false,
 		ellipsoid = null,
 		resolution = null,
+		detectSelfIntersection = false,
+		useEarcut = false,
 	} = options;
 
 	// clone, clean up, filter, and ensure winding order of the polygon shapes,
 	// then split the polygon into separate components
 	let cleanedPolygons = polygons
-		.map( polygon => polygon.map( loop => loop.map( coord => coord.slice() ) ) )
-		.map( polygon => dedupePolygonPoints( polygon ) )
-		.filter( polygon => polygon.length !== 0 )
-		.flatMap( polygon => splitPolygon( polygon ) )
+		.map( polygon => polygon.map( loop => loop.map( coord => coord.slice() ) ) );
+
+	if ( detectSelfIntersection ) {
+
+		cleanedPolygons = cleanedPolygons
+			.map( polygon => dedupePolygonPoints( polygon ) )
+			.filter( polygon => polygon.length !== 0 )
+			.flatMap( polygon => splitPolygon( polygon ) );
+
+	}
+
+	cleanedPolygons = cleanedPolygons
 		.map( polygon => correctPolygonWinding( polygon ) );
 
 	const triangulations = cleanedPolygons.map( polygon => {
@@ -135,7 +145,7 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 		let innerPoints = [];
 		if ( resolution !== null ) {
 
-			innerPoints = getInnerPoints( polygon, resolution );
+			innerPoints = useEarcut ? [] : getInnerPoints( polygon, resolution );
 
 			polygon = polygon.map( loop => {
 
@@ -153,7 +163,36 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 		} );
 
 		const [ contour, ...holes ] = polygon;
-		return triangulate( contour, holes, innerPoints );
+		if ( useEarcut ) {
+
+			const indices = ShapeUtils.triangulateShape(
+				contour.map( c => new Vector2( ...c ) ),
+				holes.map( hole => hole.map( c => new Vector2( ...c ) ) ),
+			).flatMap( tri => tri ).reverse();
+
+			let offset = 0;
+			const edges = [];
+			getLoopEdges( contour, offset, edges );
+			offset += contour.length;
+
+			holes.forEach( hole => {
+
+				getLoopEdges( hole, offset, edges );
+				offset += hole.length;
+
+			} );
+
+			return {
+				points: [ ...contour, ...holes.flatMap( hole => hole ) ],
+				indices,
+				edges,
+			};
+
+		} else {
+
+			return triangulate( contour, holes, innerPoints );
+
+		}
 
 	} );
 
@@ -257,8 +296,8 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 				const vertCorrection = - triVertIndex + reverseTriVertIndex;
 				const base = botOffset + i + 3 * vertCorrection;
 
-				normalArray[ base + 0 ] = _vec.x;
-				normalArray[ base + 1 ] = _vec.y;
+				normalArray[ base + 0 ] = - _vec.x;
+				normalArray[ base + 1 ] = - _vec.y;
 				normalArray[ base + 2 ] = - _vec.z;
 
 			}
