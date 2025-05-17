@@ -10,7 +10,7 @@ const _max = new /* @__PURE__ */ Vector3();
 
 function pointIsInPolygon( polygon, x, y ) {
 
-	// TODO: check distnce to edges
+	// TODO: check distance to edges
 
 	const [ contour, ...holes ] = polygon;
 	const isInContour = calculateAngleSum( contour, x, y ) > 3.14;
@@ -39,10 +39,14 @@ function getInnerPoints( polygon, resolution ) {
 
 	getPolygonBounds( polygon, _min, _max );
 
-	const result = [];
-	for ( let x = _min.x, lx = _max.x; x < lx; x += resolution ) {
+	// align all points to a common grid so other polygons will line up
+	const startX = Math.sign( _min.x ) * Math.ceil( Math.abs( _min.x / resolution ) ) * resolution;
+	const startY = Math.sign( _min.y ) * Math.ceil( Math.abs( _min.y / resolution ) ) * resolution;
 
-		for ( let y = _min.y, ly = _max.y; y < ly; y += resolution ) {
+	const result = [];
+	for ( let x = startX, lx = _max.x; x < lx; x += resolution ) {
+
+		for ( let y = startY, ly = _max.y; y < ly; y += resolution ) {
 
 			if ( pointIsInPolygon( polygon, x, y ) ) {
 
