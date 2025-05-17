@@ -11,6 +11,11 @@ Three.js shape loaders for [GeoJSON](https://geojson.org/) ([readable html](http
 
 Uses [@turfjs/unkink-polygon](https://www.npmjs.com/package/@turf/unkink-polygon), [@mapbox/delaunator](https://github.com/mapbox/delaunator), [@kninnug/constrainautor](https://github.com/kninnug/Constrainautor), amd [@placemark/betterknown](https://github.com/placemark/betterknown) packages for polygon triangulation and WKT parsing. World GeoJSON file courtesy of [geojson-maps](https://geojson-maps.kyd.au/).
 
+Some key features supported by this project:
+- Support for detecting and fixing self-intersecting polygons so they tringulate correctly.
+- Uses constrained delaunay triangulation for correct, high quality triangulation and support for inner vertices.
+- Smooth surface normals are generated for ellipsoid-projected shapes.
+
 > [!NOTE]
 > This project is not hosted on npm and must be installed via Github repository.
 
