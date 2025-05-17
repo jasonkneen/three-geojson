@@ -1,4 +1,4 @@
-import { BufferAttribute, MathUtils, Mesh, Points, Vector3 } from 'three';
+import { BufferAttribute, MathUtils, Mesh, Vector3 } from 'three';
 import { correctPolygonWinding, dedupePolygonPoints, getPolygonBounds, splitPolygon } from './PolygonUtils.js';
 import { resampleLine } from './GeoJSONShapeUtils.js';
 import { triangulate } from './triangulate.js';
@@ -10,6 +10,33 @@ const _dir2 = new /* @__PURE__ */ Vector3();
 const _min = new /* @__PURE__ */ Vector3();
 const _max = new /* @__PURE__ */ Vector3();
 
+// takes set of segment info from below and checks if a polygon lies on any of the segments
+function isPointOnPolygonEdge( segmentInfo, x, y ) {
+
+	for ( let i = 0, li = segmentInfo.length; i < li; i ++ ) {
+
+		const { minx, maxx, miny, maxy, slope, point } = segmentInfo[ i ];
+		if ( x < minx || x > maxx || y < miny || y > maxy ) {
+
+			continue;
+
+		}
+
+		const dx1 = x - point[ 0 ];
+		const dy1 = y - point[ 1 ];
+		if ( slope === dy1 / dx1 ) {
+
+			return true;
+
+		}
+
+	}
+
+	return false;
+
+}
+
+
 function getInnerPoints( polygon, resolution ) {
 
 	getPolygonBounds( polygon, _min, _max );
@@ -18,12 +45,50 @@ function getInnerPoints( polygon, resolution ) {
 	const startX = Math.sign( _min.x ) * Math.ceil( Math.abs( _min.x / resolution ) ) * resolution;
 	const startY = Math.sign( _min.y ) * Math.ceil( Math.abs( _min.y / resolution ) ) * resolution;
 
+	// cache a set of info to accelerate the checks for point on polygon line
+	const segmentInfo = polygon.flatMap( loop => {
+
+		const res = [];
+		for ( let i = 0, l = loop.length; i < l; i ++ ) {
+
+			const ni = ( i + 1 ) % l;
+			const c0 = loop[ i ];
+			const c1 = loop[ ni ];
+
+			const [ cx0, cy0 ] = c0;
+			const [ cx1, cy1 ] = c1;
+			const dx0 = cx1 - cx0;
+			const dy0 = cy1 - cy0;
+			const slope = dy0 / dx0;
+
+			const minx = Math.min( cx0, cx1 );
+			const maxx = Math.max( cx0, cx1 );
+			const miny = Math.min( cy0, cy1 );
+			const maxy = Math.max( cy0, cy1 );
+
+			res.push( {
+				point: c0,
+				slope,
+				minx, maxx,
+				miny, maxy,
+			} );
+
+		}
+
+		return res;
+
+	} );
+
 	const result = [];
 	for ( let x = startX, lx = _max.x; x < lx; x += resolution ) {
 
 		for ( let y = startY, ly = _max.y; y < ly; y += resolution ) {
 
-			result.push( [ x, y ] );
+			if ( ! isPointOnPolygonEdge( segmentInfo, x, y ) ) {
+
+				result.push( [ x, y ] );
+
+			}
 
 		}
 
