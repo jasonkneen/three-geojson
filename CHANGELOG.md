@@ -8,8 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Error that could be thrown the processing polygons.
 
+### Changed
+- Removed "generateNormals" option.
+
 ### Added
-- Support for the "resolution" option to resample edges.
+- Support for the "resolution" option to resample edges and lines.
+- Support for smooth normals with ellipsoid tiles.
+- Support for upsampling vertex detail in polygons to enable correctly distorted ellipsoid shapes. 
 
 ## [0.0.6] - 2025.05.16
 ### Fixed
