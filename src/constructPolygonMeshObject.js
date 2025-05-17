@@ -1,10 +1,12 @@
-import { BufferAttribute, Mesh, Points, Vector3 } from 'three';
+import { BufferAttribute, MathUtils, Mesh, Points, Vector3 } from 'three';
 import { correctPolygonWinding, dedupePolygonPoints, getPolygonBounds, splitPolygon } from './PolygonUtils.js';
 import { resampleLine } from './GeoJSONShapeUtils.js';
 import { triangulate } from './triangulate.js';
 import { getCenter, offsetPoints, transformToEllipsoid } from './FlatVertexBufferUtils.js';
 
 const _vec = new /* @__PURE__ */ Vector3();
+const _dir1 = new /* @__PURE__ */ Vector3();
+const _dir2 = new /* @__PURE__ */ Vector3();
 const _min = new /* @__PURE__ */ Vector3();
 const _max = new /* @__PURE__ */ Vector3();
 
@@ -31,6 +33,19 @@ function getInnerPoints( polygon, resolution ) {
 
 }
 
+function addFaceNormals( index, posArray, normalArray ) {
+
+	_vec.fromArray( posArray, index );
+	_dir1.fromArray( posArray, index + 3 ).sub( _vec );
+	_dir2.fromArray( posArray, index + 6 ).sub( _vec );
+
+	_vec.crossVectors( _dir1, _dir2 ).normalize();
+	_vec.toArray( normalArray, index );
+	_vec.toArray( normalArray, index + 3 );
+	_vec.toArray( normalArray, index + 6 );
+
+}
+
 export function constructPolygonMeshObject( polygons, options = {} ) {
 
 	const {
@@ -45,6 +60,7 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 	// clean up, filter, and ensure winding order of the polygon shapes,
 	// then split the polygon into separate components
 	let cleanedPolygons = polygons
+		.map( polygon => polygon.map( loop => loop.map( coord => coord.slice() ) ) )
 		.map( polygon => dedupePolygonPoints( polygon ) )
 		.filter( polygon => polygon.length !== 0 )
 		.flatMap( polygon => splitPolygon( polygon ) )
@@ -89,6 +105,7 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 
 	const totalVerts = thickness === 0 ? capVertices : ( 2 * capVertices + edgeVertices );
 	const posArray = new Array( totalVerts * 3 );
+	const normalArray = new Float32Array( totalVerts * 3 );
 	let topOffset = 0;
 	let botOffset = capVertices * 3;
 	let sideOffset = capVertices * 2 * 3;
@@ -154,10 +171,58 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 	} );
 
 	// transform the points to the ellipsoid
-	console.log( posArray.length, posArray.length )
 	if ( ellipsoid ) {
 
+		for ( let i = 0; i < capVertices * 3; i += 3 ) {
+
+			const lon = posArray[ i + 0 ] * MathUtils.DEG2RAD;
+			const lat = posArray[ i + 1 ] * MathUtils.DEG2RAD;
+			ellipsoid.getCartographicToNormal( lat, lon, _vec );
+
+			normalArray[ i + 0 ] = _vec.x;
+			normalArray[ i + 1 ] = _vec.y;
+			normalArray[ i + 2 ] = _vec.z;
+
+			if ( thickness > 0 ) {
+
+				normalArray[ capVertices * 3 + i + 0 ] = _vec.x;
+				normalArray[ capVertices * 3 + i + 1 ] = _vec.y;
+				normalArray[ capVertices * 3 + i + 2 ] = - _vec.z;
+
+			}
+
+		}
+
 		transformToEllipsoid( posArray, ellipsoid );
+
+	} else {
+
+		for ( let i = 0; i < capVertices * 3; i += 3 ) {
+
+			normalArray[ i + 0 ] = 0;
+			normalArray[ i + 1 ] = 0;
+			normalArray[ i + 2 ] = 1;
+
+			if ( thickness > 0 ) {
+
+				normalArray[ capVertices * 3 + i + 0 ] = 0;
+				normalArray[ capVertices * 3 + i + 1 ] = 0;
+				normalArray[ capVertices * 3 + i + 2 ] = - 1;
+
+			}
+
+		}
+
+	}
+
+	// calculate the post-transformed side normals
+	if ( thickness > 0 ) {
+
+		for ( let i = capVertices * 2 * 3; i < normalArray.length; i += 9 ) {
+
+			addFaceNormals( i, posArray, normalArray );
+
+		}
 
 	}
 
@@ -168,13 +233,7 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 	offsetPoints( posArray, ..._vec );
 
 	mesh.geometry.setAttribute( 'position', new BufferAttribute( new Float32Array( posArray ), 3, false ) );
-
-	if ( generateNormals ) {
-
-		// to compute vertex normals we need to remove indices
-		mesh.geometry.computeVertexNormals();
-
-	}
+	mesh.geometry.setAttribute( 'normal', new BufferAttribute( normalArray, 3, false ) );
 
 	return mesh;
 
