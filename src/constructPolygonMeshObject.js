@@ -307,6 +307,15 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 	mesh.geometry.setAttribute( 'position', new BufferAttribute( new Float32Array( posArray ), 3, false ) );
 	mesh.geometry.setAttribute( 'normal', new BufferAttribute( normalArray, 3, false ) );
 
+	// add groups in a top, bottom, sides order
+	mesh.geometry.addGroup( 0, capVertices, 0 );
+	if ( thickness > 0 ) {
+
+		mesh.geometry.addGroup( capVertices, capVertices, 1 );
+		mesh.geometry.addGroup( capVertices * 2, edgeVertices, 2 );
+
+	}
+
 	return mesh;
 
 }
