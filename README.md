@@ -9,7 +9,13 @@
 
 Three.js shape loaders for [GeoJSON](https://geojson.org/) ([readable html](https://stevage.github.io/geojson-spec/)) and [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry) formats. Supports generation of three.js line geometry in addition to flat and extruded tringulated meshes. All generated geometry are transformed and centered using 64-bit Javascript floating point operations with meshes are offset to retain precision in GPU operations.
 
-Uses [@turfjs/unkink-polygon](https://www.npmjs.com/package/@turf/unkink-polygon) and [betterknown](https://github.com/placemark/betterknown) packages. World GeoJSON file courtesy of [geojson-maps](https://geojson-maps.kyd.au/).
+Uses [@turfjs/unkink-polygon](https://www.npmjs.com/package/@turf/unkink-polygon), [@mapbox/delaunator](https://github.com/mapbox/delaunator), [@kninnug/constrainautor](https://github.com/kninnug/Constrainautor), amd [@placemark/betterknown](https://github.com/placemark/betterknown) packages for polygon triangulation and WKT parsing. World GeoJSON file courtesy of [geojson-maps](https://geojson-maps.kyd.au/).
+
+Some key features supported by this project:
+- Support for detecting and fixing self-intersecting polygons so they tringulate correctly.
+- Uses constrained delaunay triangulation for correct, high quality triangulation and support for inner vertices.
+- Smooth surface normals are generated for ellipsoid-projected shapes.
+- Outputs centered geometry with and matrix transform offset to avoid preceision-related artifacts on CPU and GPU when processing high-detail shapes.
 
 > [!NOTE]
 > This project is not hosted on npm and must be installed via Github repository.
