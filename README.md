@@ -104,9 +104,9 @@ Definition of a parsed set of line string geometry. `Ellipsoid` is from the 3d-t
   // function for building three.js LineSegments from the line data
   getLineObject( options: {
     flat = false: boolean,
-		offset = 0: number,
-		ellipsoid = null: Ellipsoid,
-		resolution = null: number,
+    offset = 0: number,
+    ellipsoid = null: Ellipsoid,
+    resolution = null: number,
   } ): LineSegments,
 }
 ```
@@ -123,17 +123,17 @@ Definition of a parsed set of polygon geometry. `Ellipsoid` is from the 3d-tiles
   // functions for building three.js LineSegments and Mesh from the line data
   getLineObject( options: {
     flat = false: boolean,
-		offset = 0: number,
-		ellipsoid = null: Ellipsoid,
-		resolution = null: number,
+    offset = 0: number,
+    ellipsoid = null: Ellipsoid,
+    resolution = null: number,
   } ): LineSegments,
 
   getMeshObject( options: {
     thickness = 0: number,
     offset = 0: number,
     flat = false: boolean,
-		ellipsoid = null: Ellipsoid,
-		resolution = null: number,
+    ellipsoid = null: Ellipsoid,
+    resolution = null: number,
   } ): Mesh,
 }
 ```
