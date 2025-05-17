@@ -131,7 +131,6 @@ Definition of a parsed set of polygon geometry. `Ellipsoid` is from the 3d-tiles
   getMeshObject( options: {
     thickness = 0: number,
     offset = 0: number,
-    generateNormals = true: boolean,
     flat = false: boolean,
 		ellipsoid = null: Ellipsoid,
 		resolution = null: number,

@@ -87,18 +87,9 @@ new GeoJSONLoader()
 		// load the globe lines
 		res.polygons.forEach( geom => {
 
-			const line = geom.getLineObject( {
-				ellipsoid: WGS84_ELLIPSOID,
-				resolution,
-			} );
-			group.add( line );
+			const feature = geom.feature;
 
-		} );
-
-		res.features
-			.filter( f => new RegExp( country ).test( f.properties.name ) )
-			.flatMap( f => f.polygons )
-			.forEach( geom => {
+			if ( feature && new RegExp( country ).test( feature.properties.name ) ) {
 
 				const mesh = geom.getMeshObject( {
 					ellipsoid: WGS84_ELLIPSOID,
@@ -108,7 +99,17 @@ new GeoJSONLoader()
 				mesh.material = new MeshStandardMaterial();
 				group.add( mesh );
 
-			} );
+			} else {
+
+				const line = geom.getLineObject( {
+					ellipsoid: WGS84_ELLIPSOID,
+					resolution,
+				} );
+				group.add( line );
+
+			}
+
+		} );
 
 		// scale and center the model
 		const box = new Box3();
