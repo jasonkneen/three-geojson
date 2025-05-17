@@ -78,9 +78,20 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 	} );
 
 	// collect the points
-	const topArray = [];
-	const sidesArray = [];
-	const botArray = [];
+	let capVertices = 0;
+	let edgeVertices = 0;
+	triangulations.forEach( ( { indices, edges } ) => {
+
+		capVertices += indices.length;
+		edgeVertices += edges.length * 2 * 3;
+
+	} );
+
+	const totalVerts = thickness === 0 ? capVertices : ( 2 * capVertices + edgeVertices );
+	const posArray = new Array( totalVerts * 3 );
+	let topOffset = 0;
+	let botOffset = capVertices * 3;
+	let sideOffset = capVertices * 2 * 3;
 	triangulations.forEach( ( { indices, points, edges } ) => {
 
 		// construct cap
@@ -88,15 +99,17 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 		const topHeight = offset + thickness;
 		for ( let i = 0, l = indices.length; i < l; i += 3 ) {
 
-			addPoint( indices[ i + 2 ], topHeight, topArray );
-			addPoint( indices[ i + 1 ], topHeight, topArray );
-			addPoint( indices[ i + 0 ], topHeight, topArray );
+			addPoint( indices[ i + 2 ], topHeight, topOffset + 0 );
+			addPoint( indices[ i + 1 ], topHeight, topOffset + 3 );
+			addPoint( indices[ i + 0 ], topHeight, topOffset + 6 );
+			topOffset += 9;
 
 			if ( thickness > 0 ) {
 
-				addPoint( indices[ i + 0 ], botHeight, botArray );
-				addPoint( indices[ i + 1 ], botHeight, botArray );
-				addPoint( indices[ i + 2 ], botHeight, botArray );
+				addPoint( indices[ i + 0 ], botHeight, botOffset + 0 );
+				addPoint( indices[ i + 1 ], botHeight, botOffset + 3 );
+				addPoint( indices[ i + 2 ], botHeight, botOffset + 6 );
+				botOffset += 9;
 
 			}
 
@@ -114,30 +127,34 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 				const i2 = i0;
 				const i3 = i1;
 
-				addPoint( i0, botHeight, sidesArray );
-				addPoint( i2, topHeight, sidesArray );
-				addPoint( i1, botHeight, sidesArray );
+				addPoint( i0, botHeight, sideOffset + 0 );
+				addPoint( i2, topHeight, sideOffset + 3 );
+				addPoint( i1, botHeight, sideOffset + 6 );
+				sideOffset += 9;
 
-				addPoint( i1, botHeight, sidesArray );
-				addPoint( i2, topHeight, sidesArray );
-				addPoint( i3, topHeight, sidesArray );
+				addPoint( i1, botHeight, sideOffset + 0 );
+				addPoint( i2, topHeight, sideOffset + 3 );
+				addPoint( i3, topHeight, sideOffset + 6 );
+				sideOffset += 9;
 
 			}
 
 		}
 
-		function addPoint( index, offset, arr ) {
+		function addPoint( index, zOffset, indexOffset ) {
 
 			const point = points[ index ];
 			const z = flat ? 0 : ( point[ 2 ] || 0 );
-			arr.push( point[ 0 ], point[ 1 ], z + offset );
+			posArray[ indexOffset + 0 ] = point[ 0 ];
+			posArray[ indexOffset + 1 ] = point[ 1 ];
+			posArray[ indexOffset + 2 ] = z + zOffset;
 
 		}
 
 	} );
 
 	// transform the points to the ellipsoid
-	const posArray = [ ...topArray, ...botArray, ...sidesArray ];
+	console.log( posArray.length, posArray.length )
 	if ( ellipsoid ) {
 
 		transformToEllipsoid( posArray, ellipsoid );
