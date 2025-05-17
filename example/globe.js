@@ -7,7 +7,6 @@ import {
 	Vector3,
 	Mesh,
 	SphereGeometry,
-	MeshBasicMaterial,
 	Clock,
 	MeshStandardMaterial,
 	DirectionalLight,
@@ -36,11 +35,9 @@ const clock = new Clock();
 const controls = new OrbitControls( camera, renderer.domElement );
 controls.minDistance = 1;
 controls.enableDamping = true;
-controls.autoRotate = true;
-controls.autoRotateSpeed = 1;
 
 // lights
-const directionalLight = new DirectionalLight( 0xffffff, 3.5 );
+const directionalLight = new DirectionalLight( 0xffffff, 2.75 );
 directionalLight.position.set( 1, 2, 0 );
 
 const ambientLight = new AmbientLight( 0xffffff, 1.0 );
@@ -70,11 +67,12 @@ new GeoJSONLoader()
 		// add base globe color
 		const globeBase = new Mesh(
 			new SphereGeometry( 1, 100, 50 ),
-			new MeshBasicMaterial( {
+			new MeshStandardMaterial( {
 				color: 0x222222,
 				transparent: true,
 				opacity: 0.75,
 				depthWrite: false,
+				premultipliedAlpha: true,
 
 				polygonOffset: true,
 				polygonOffsetFactor: 1,
@@ -133,6 +131,8 @@ function animate() {
 
 	controls.update( Math.min( clock.getDelta(), 64 / 1000 ) );
 	renderer.render( scene, camera );
+
+	group.rotation.z = window.performance.now() * 1e-4;
 
 }
 
