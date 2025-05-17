@@ -177,3 +177,30 @@ export function calculateAngleSum( loop, x, y ) {
 	return Math.abs( angleSum );
 
 }
+
+export function isPointInPolygon( polygon, x, y ) {
+
+	// TODO: check distance to edges
+
+	const [ contour, ...holes ] = polygon;
+	const isInContour = calculateAngleSum( contour, x, y ) > 3.14;
+	if ( ! isInContour ) {
+
+		return false;
+
+	}
+
+	for ( let i = 0, l = holes.length; i < l; i ++ ) {
+
+		const isInHole = calculateAngleSum( holes[ i ], x, y ) > 3.14;
+		if ( isInHole ) {
+
+			return false;
+
+		}
+
+	}
+
+	return true;
+
+}
