@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Support for the "resolution" option to resample edges and lines.
 - Support for smooth normals with ellipsoid tiles.
-- Support for upsampling vertex detail in polygons to enable correctly distorted ellipsoid shapes. 
+- Support for upsampling vertex detail in polygons to enable correctly distorted ellipsoid shapes.
+- `useEarcut` and `skipSelfIntersection` options to optionally speed up performance.
 
 ## [0.0.6] - 2025.05.16
 ### Fixed
