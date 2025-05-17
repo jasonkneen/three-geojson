@@ -1,6 +1,6 @@
 import { Vector3, ShapeUtils, BufferAttribute, Mesh } from 'three';
 import { unkinkPolygon } from '@turf/unkink-polygon';
-import { dedupeCoordinates } from './GeoJSONShapeUtils.js';
+import { dedupeCoordinates, resampleLine } from './GeoJSONShapeUtils.js';
 import { getCenter, offsetPoints, transformToEllipsoid } from './FlatVertexBufferUtils.js';
 import { triangulate } from './triangulate.js';
 
@@ -10,6 +10,9 @@ const _max = new /* @__PURE__ */ Vector3();
 const _center = new /* @__PURE__ */ Vector3();
 
 function splitPolygon( polygon ) {
+
+	// get the dimension of the loops
+	const dimension = polygon[ 0 ][ 0 ].length;
 
 	// find the bounds of the shape
 	getPolygonBounds( polygon, _min, _max );
@@ -36,7 +39,7 @@ function splitPolygon( polygon ) {
 	} ) ) );
 
 	// Fix the 2d offset
-	if ( fixedPolygons.length > 1 && this.dimension > 2 ) {
+	if ( fixedPolygons.length > 1 && dimension > 2 ) {
 
 		fixedPolygons.forEach( shape => shape.forEach( loop => loop.forEach( coord => {
 
@@ -85,7 +88,7 @@ function cleanPolygons( polygons ) {
 
 		} );
 
-	return dedeupedPolygons.filter( shape => shape.length !== 0 );
+	return dedeupedPolygons.filter( polygon => polygon.length !== 0 );
 
 }
 
@@ -114,11 +117,24 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 		generateNormals = true,
 		flat = false,
 		ellipsoid = null,
+		resolution = null,
 	} = options;
 
 	// clean up and filter the polygon shapes, then split the polygon into separate components
-	const cleanedPolygons = cleanPolygons( polygons )
+	let cleanedPolygons = cleanPolygons( polygons )
 		.flatMap( polygon => splitPolygon( polygon ) );
+
+	// resample the polygon edge
+	if ( resolution !== null ) {
+
+		cleanedPolygons = cleanedPolygons
+			.map( polygon => polygon.map( loop => {
+
+				return resampleLine( loop, resolution );
+
+			} ) );
+
+	}
 
 	// remove last point
 	cleanedPolygons.forEach( shape => {

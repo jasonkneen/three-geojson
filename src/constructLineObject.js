@@ -1,5 +1,6 @@
 import { BufferAttribute, LineSegments, Vector3 } from 'three';
 import { getCenter, offsetPoints, transformToEllipsoid } from './FlatVertexBufferUtils.js';
+import { resampleLine } from './GeoJSONShapeUtils.js';
 
 const _vec = new /* @__PURE__ */ Vector3();
 
@@ -10,7 +11,19 @@ export function constructLineObject( lineStrings, options = {} ) {
 		flat = false,
 		offset = 0,
 		ellipsoid = null,
+		resolution = null,
 	} = options;
+
+	// resample the polygon edge
+	if ( resolution !== null ) {
+
+		lineStrings = lineStrings.map( loop => {
+
+			return resampleLine( loop, resolution );
+
+		} );
+
+	}
 
 	// calculate total segments
 	let totalSegments = 0;

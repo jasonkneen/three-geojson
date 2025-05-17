@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.0.7] - Unreleased
+### Fixed
+- Error that could be thrown the processing polygons.
+
+### Added
+- Support for the "resolution" option to resample edges.
+
+## [0.0.6] - 2025.05.16
+### Fixed
+- Fixed case where points created from polygon crossing were always placed at "0".
+- Fixed some precision issues associated with the polygon generation.
+
 ## [0.0.5] - 2025.05.14
 ### Fixed
 - Fixed case where shapes with less than 4 vertices after vertex deduplication would not triangulate.
