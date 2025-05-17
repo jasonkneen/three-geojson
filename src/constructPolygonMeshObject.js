@@ -237,6 +237,7 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 	// transform the points to the ellipsoid
 	if ( ellipsoid ) {
 
+		const botOffset = capVertices * 3;
 		for ( let i = 0; i < capVertices * 3; i += 3 ) {
 
 			const lon = posArray[ i + 0 ] * MathUtils.DEG2RAD;
@@ -249,9 +250,16 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 
 			if ( thickness > 0 ) {
 
-				normalArray[ capVertices * 3 + i + 0 ] = _vec.x;
-				normalArray[ capVertices * 3 + i + 1 ] = _vec.y;
-				normalArray[ capVertices * 3 + i + 2 ] = - _vec.z;
+				// find the equivalent vertex in the bottom cap that using a different winding order
+				const vert = i / 3;
+				const triVertIndex = vert % 3;
+				const reverseTriVertIndex = 2 - triVertIndex;
+				const vertCorrection = - triVertIndex + reverseTriVertIndex;
+				const base = botOffset + i + 3 * vertCorrection;
+
+				normalArray[ base + 0 ] = _vec.x;
+				normalArray[ base + 1 ] = _vec.y;
+				normalArray[ base + 2 ] = - _vec.z;
 
 			}
 
