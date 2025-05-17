@@ -96,24 +96,11 @@ export function correctPolygonWinding( polygon ) {
 
 }
 
-export function dedupePolygonPoints( polygons ) {
+export function dedupePolygonPoints( polygon ) {
 
-	// clone each polygon with deduped set of vertices
-	const result = polygons
-		.map( polygon => {
-
-			return polygon
-				.map( loop => dedupeCoordinates( loop.slice() ) )
-				.filter( loop => loop.length > 3 );
-
-		} )
-		.filter( polygon => {
-
-			return polygon.length !== 0;
-
-		} );
-
-	return result;
+	return polygon
+		.map( loop => dedupeCoordinates( loop.slice() ) )
+		.filter( loop => loop.length > 3 );
 
 }
 

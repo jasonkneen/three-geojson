@@ -71,7 +71,9 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 
 	// clean up, filter, and ensure winding order of the polygon shapes,
 	// then split the polygon into separate components
-	let cleanedPolygons = dedupePolygonPoints( polygons )
+	let cleanedPolygons = polygons
+		.map( polygon => dedupePolygonPoints( polygon ) )
+		.filter( polygon => polygon.length !== 0 )
 		.flatMap( polygon => splitPolygon( polygon ) )
 		.map( polygon => correctPolygonWinding( polygon ) );
 
