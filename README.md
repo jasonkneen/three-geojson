@@ -16,9 +16,11 @@ Uses [@turfjs/unkink-polygon](https://www.npmjs.com/package/@turf/unkink-polygon
 
 # Examples
 
-[WGS84 GeoJSON Lines](https://gkjohnson.github.io/three-geojson/example/bundle/globe.html)
+[WGS84 Lines](https://gkjohnson.github.io/three-geojson/example/bundle/globe.html)
 
-[Extruded GeoJSON Polygon](https://gkjohnson.github.io/three-geojson/example/bundle/extruded.html)
+[WGS84 Extruded Polygons](https://gkjohnson.github.io/three-geojson/example/bundle/globe.html?country=.)
+
+[Extruded Polygon](https://gkjohnson.github.io/three-geojson/example/bundle/extruded.html)
 
 [WKT Polygon](https://gkjohnson.github.io/three-geojson/example/bundle/wkt.html)
 
