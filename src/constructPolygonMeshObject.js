@@ -44,6 +44,8 @@ function getInnerPoints( polygon, resolution ) {
 	// align all points to a common grid so other polygons will line up
 	const startX = Math.sign( _min.x ) * Math.ceil( Math.abs( _min.x / resolution ) ) * resolution;
 	const startY = Math.sign( _min.y ) * Math.ceil( Math.abs( _min.y / resolution ) ) * resolution;
+	const z = ( _max.z + _min.z ) * 0.5;
+	const dimension = polygon[ 0 ][ 0 ].length;
 
 	// cache a set of info to accelerate the checks for point on polygon line
 	const segmentInfo = polygon.flatMap( loop => {
@@ -86,7 +88,7 @@ function getInnerPoints( polygon, resolution ) {
 
 			if ( ! isPointOnPolygonEdge( segmentInfo, x, y ) ) {
 
-				result.push( [ x, y ] );
+				result.push( dimension === 2 ? [ x, y ] : [ x, y, z ] );
 
 			}
 
