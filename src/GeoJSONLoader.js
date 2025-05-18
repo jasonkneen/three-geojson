@@ -171,7 +171,6 @@ export class GeoJSONLoader {
 
 					getLineObject: getPolygonLineObject,
 					getMeshObject: getPolygonMeshObject,
-					OBJ: object,
 				};
 
 			}
@@ -186,8 +185,6 @@ export class GeoJSONLoader {
 
 					getLineObject: getPolygonLineObject,
 					getMeshObject: getPolygonMeshObject,
-					OBJ: object,
-
 				};
 
 			}

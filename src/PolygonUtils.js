@@ -1,10 +1,24 @@
 import { Vector3 } from 'three';
 import { unkinkPolygon } from '@turf/unkink-polygon';
-import { dedupeCoordinates, isClockWise } from './GeoJSONShapeUtils.js';
+import { dedupeCoordinates, isClockWise, isPointInPolygon } from './GeoJSONShapeUtils.js';
 
 const _min = new /* @__PURE__ */ Vector3();
 const _max = new /* @__PURE__ */ Vector3();
 const _center = new /* @__PURE__ */ Vector3();
+
+function fixLoop( loop ) {
+
+	return unkinkPolygon( { type: 'Polygon', coordinates: [ loop ] } )
+		.features
+		.flatMap( feature => {
+
+			return feature.geometry.type === 'Multipolygon' ?
+				feature.geometry.coordinates.flatMap( loop => loop ) :
+				feature.geometry.coordinates;
+
+ 		} );
+
+}
 
 export function splitPolygon( polygon ) {
 
@@ -23,9 +37,30 @@ export function splitPolygon( polygon ) {
 
 	} ) );
 
-	// unkink the polygon
-	const fixedPolygons = unkinkPolygon( { type: 'Polygon', coordinates: polygon } )
-		.features.map( feature => feature.geometry.coordinates );
+	// fix up each shape separately
+	const [ contour, ...holes ] = polygon;
+	const fixedHoles = holes.flatMap( hole => fixLoop( hole ) );
+	const fixedContours = fixLoop( contour );
+	let fixedPolygons;
+
+	// find the holes that are inside each contour
+	if ( fixedContours.length === 1 ) {
+
+		fixedPolygons = [[ contour, ...holes ]];
+
+	} else {
+
+		fixedPolygons = fixedContours.map( contour => {
+
+			return [ contour, ...fixedHoles.filter( hole => {
+
+				return isPointInPolygon( [ contour ], ...hole[ 0 ] );
+
+			} ) ];
+
+		} );
+
+	}
 
 	// Reset the centering
 	fixedPolygons.forEach( shape => shape.forEach( loop => loop.forEach( coord => {
