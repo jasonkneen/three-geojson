@@ -16,6 +16,7 @@ Some key features supported by this project:
 - Uses constrained delaunay triangulation for correct, high quality triangulation and support for inner vertices.
 - Smooth surface normals are generated for ellipsoid-projected shapes.
 - Outputs centered geometry with and matrix transform offset to avoid preceision-related artifacts on CPU and GPU when processing high-detail shapes.
+- Supports altitude values.
 
 > [!NOTE]
 > This project is not hosted on npm and must be installed via Github repository.
@@ -143,6 +144,41 @@ Definition of a parsed set of polygon geometry. `Ellipsoid` is from the 3d-tiles
     useEarcut = false: boolen,
     detectSelfIntersection = true: boolean,
   } ): Mesh,
+}
+```
+
+**Mesh Generation Options**
+
+Descriptions of the options used in the `getLineObject` and `getMeshObject` functions above.
+
+```js
+{
+  // The offset of the generated geometry on the z axis.
+  offset,
+
+  // If "true" then any altitude or z-values are ignored.
+  flat,
+
+  // The ellipsoid to use to project the generated geometry onto a globe surface.
+  // If no ellipsoid is provided then no projection is done.
+  ellipsoid,
+
+  // The spacing to use when generating internal points and edge resampling for
+  // triangulation. Useful when projecting a geometry to an ellipsoid surface
+  // and more geometry detail is needed for the curvature.
+  // If resolution is set to "null" then no resampling is done.
+  resolution,
+
+  // The thickness of the generated geometry on the z axis
+  thickness,
+
+  // Whether to use the "earcut" algorithm rather than delaunay for performance.
+  // Note that this can result in some cases where triangles do not have sibling edges.
+  useEarcut = false: boolen,
+
+  // Whether to perform self polygon intersection checks and split polygons at intersections.
+  // Can be disabled when a data set is known to be well-formed to improve performance. 
+  detectSelfIntersection = true: boolean,
 }
 ```
 
