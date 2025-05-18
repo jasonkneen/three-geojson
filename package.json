@@ -1,6 +1,6 @@
 {
   "name": "three-geojson",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Three.js shape loaders for GeoJSON and WKT formats.",
   "type": "module",
   "sideEffects": false,
@@ -31,9 +31,9 @@
     "3d-tiles-renderer": ">=0.4.0",
     "three": ">=0.140.0"
   },
-	"peerDependenciesMeta": {
-		"3d-tiles-renderer": {
-			"optional": true
-		}
-	}
+  "peerDependenciesMeta": {
+    "3d-tiles-renderer": {
+      "optional": true
+    }
+  }
 }
