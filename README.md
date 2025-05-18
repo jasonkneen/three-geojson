@@ -124,7 +124,6 @@ Definition of a parsed set of polygon geometry. `Ellipsoid` is from the 3d-tiles
 
   // functions for building three.js LineSegments and Mesh from the line data
   getLineObject( options?: object ): LineSegments,
-
   getMeshObject( options?: object ): Mesh,
 }
 ```
