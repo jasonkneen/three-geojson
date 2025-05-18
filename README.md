@@ -27,6 +27,8 @@ Some key features supported by this project:
 
 [WGS84 Extruded Polygons](https://gkjohnson.github.io/three-geojson/example/bundle/globe.html?country=.)
 
+[WGS84 Wireframe Polygons](https://gkjohnson.github.io/three-geojson/example/bundle/globe.html?country=.&wireframe=true)
+
 [Extruded Polygon](https://gkjohnson.github.io/three-geojson/example/bundle/extruded.html)
 
 [WKT Polygon](https://gkjohnson.github.io/three-geojson/example/bundle/wkt.html)
