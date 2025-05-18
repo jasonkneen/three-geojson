@@ -109,12 +109,7 @@ Definition of a parsed set of line string geometry. `Ellipsoid` is from the 3d-t
   feature: Feature,
 
   // function for building three.js LineSegments from the line data
-  getLineObject( options: {
-    flat = false: boolean,
-    offset = 0: number,
-    ellipsoid = null: Ellipsoid,
-    resolution = null: number,
-  } ): LineSegments,
+  getLineObject( options?: object ): LineSegments,
 }
 ```
 
@@ -128,22 +123,9 @@ Definition of a parsed set of polygon geometry. `Ellipsoid` is from the 3d-tiles
   feature: Feature,
 
   // functions for building three.js LineSegments and Mesh from the line data
-  getLineObject( options: {
-    flat = false: boolean,
-    offset = 0: number,
-    ellipsoid = null: Ellipsoid,
-    resolution = null: number,
-  } ): LineSegments,
+  getLineObject( options?: object ): LineSegments,
 
-  getMeshObject( options: {
-    thickness = 0: number,
-    offset = 0: number,
-    flat = false: boolean,
-    ellipsoid = null: Ellipsoid,
-    resolution = null: number,
-    useEarcut = false: boolen,
-    detectSelfIntersection = true: boolean,
-  } ): Mesh,
+  getMeshObject( options?: object ): Mesh,
 }
 ```
 
@@ -154,27 +136,34 @@ Descriptions of the options used in the `getLineObject` and `getMeshObject` func
 ```js
 {
   // The offset of the generated geometry on the z axis.
-  offset,
+  offset = 0: number,
 
   // If "true" then any altitude or z-values are ignored.
-  flat,
+  flat = false: boolean,
 
   // The ellipsoid to use to project the generated geometry onto a globe surface.
   // If no ellipsoid is provided then no projection is done.
-  ellipsoid,
+  // Ellipsoid class should be shaped like that from the 3d-tiles-renderer project.
+  ellipsoid = null: Ellipsoid,
 
   // The spacing to use when generating internal points and edge resampling for
   // triangulation. Useful when projecting a geometry to an ellipsoid surface
   // and more geometry detail is needed for the curvature.
   // If resolution is set to "null" then no resampling is done.
-  resolution,
+  resolution = null: number,
+}
+```
 
+Additonal polygon "getMeshObject" options:
+
+```js
+{
   // The thickness of the generated geometry on the z axis
-  thickness,
+  thickness = 0: number,
 
   // Whether to use the "earcut" algorithm rather than delaunay for performance.
   // Note that this can result in some cases where triangles do not have sibling edges.
-  useEarcut = false: boolen,
+  useEarcut = false: boolean,
 
   // Whether to perform self polygon intersection checks and split polygons at intersections.
   // Can be disabled when a data set is known to be well-formed to improve performance. 
