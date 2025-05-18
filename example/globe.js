@@ -11,6 +11,7 @@ import {
 	MeshStandardMaterial,
 	DirectionalLight,
 	AmbientLight,
+	MeshBasicMaterial,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GeoJSONLoader } from '../src/index.js';
@@ -58,6 +59,7 @@ new GeoJSONLoader()
 		const country = queryParams.get( 'country' ) || 'Japan';
 		let thickness = parseFloat( queryParams.get( 'thickness' ) );
 		let resolution = parseFloat( queryParams.get( 'resolution' ) ) || 2.5;
+		let wireframe = Boolean( queryParams.get( 'wireframe' ) );
 		if ( thickness !== 0 ) {
 
 			thickness = thickness || ( 1e5 * 0.5 );
@@ -80,7 +82,12 @@ new GeoJSONLoader()
 			} ),
 		);
 		globeBase.scale.copy( WGS84_ELLIPSOID.radius );
+		globeBase.renderOrder = 1;
 		group.add( globeBase );
+
+		const wireframeGroup = new Group();
+		wireframeGroup.visible = wireframe;
+		group.add( wireframeGroup );
 
 		// load the globe lines
 		res.polygons.forEach( geom => {
@@ -94,8 +101,22 @@ new GeoJSONLoader()
 					thickness,
 					resolution,
 				} );
-				mesh.material = new MeshStandardMaterial();
+				mesh.material = new MeshStandardMaterial( {
+					polygonOffset: true,
+					polygonOffsetFactor: 1,
+					polygonOffsetUnits: 1,
+				} );
 				group.add( mesh );
+
+				const wireframeMesh = mesh.clone();
+				wireframeMesh.material = new MeshBasicMaterial( {
+					color: 0,
+					opacity: 0.15,
+					transparent: true,
+					depthWrite: false,
+					wireframe: true,
+				} );
+				wireframeGroup.add( wireframeMesh );
 
 			} else {
 
