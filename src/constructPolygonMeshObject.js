@@ -121,7 +121,7 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 		flat = false,
 		ellipsoid = null,
 		resolution = null,
-		detectSelfIntersection = false,
+		detectSelfIntersection = true,
 		useEarcut = false,
 	} = options;
 
