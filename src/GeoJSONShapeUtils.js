@@ -1,3 +1,5 @@
+import { MathUtils } from 'three';
+
 // Removes any duplicate vertices
 export function dedupeCoordinates( coords ) {
 
@@ -91,7 +93,7 @@ export function traverse( object, callback ) {
 }
 
 // takes the provided line and resamples it so the segments are at most minDistance long
-export function resampleLine( loop, minDistance ) {
+export function resampleLine( loop, minDistance, mode = 'grid' ) {
 
 	const result = [];
 	for ( let i = 0, li = loop.length; i < li - 1; i ++ ) {
@@ -102,8 +104,24 @@ export function resampleLine( loop, minDistance ) {
 
 		const dx = nc[ 0 ] - c[ 0 ];
 		const dy = nc[ 1 ] - c[ 1 ];
-		const dist = Math.sqrt( dx ** 2 + dy ** 2 );
-		const steps = Math.ceil( dist / minDistance );
+		let steps;
+		if ( mode === 'grid' ) {
+
+			const dist = Math.sqrt( dx ** 2 + dy ** 2 );
+			steps = Math.ceil( dist / minDistance );
+
+		} else {
+
+			const midy = ( c[ 1 ] + nc[ 1 ] ) / 2;
+			const yDist = minDistance;
+			const xDist = minDistance / Math.sin( Math.PI / 2 + MathUtils.DEG2RAD * midy );
+
+			const ySteps = dy / yDist;
+			const xSteps = dx / xDist;
+
+			steps = Math.ceil( Math.max( xSteps, ySteps ) );
+
+		}
 
 		result.push( c );
 

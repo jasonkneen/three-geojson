@@ -36,8 +36,7 @@ function isPointOnPolygonEdge( segmentInfo, x, y ) {
 
 }
 
-
-function getInnerPoints( polygon, resolution ) {
+function getInnerPoints( polygon, resolution, mode = 'grid' ) {
 
 	getPolygonBounds( polygon, _min, _max );
 
@@ -46,6 +45,13 @@ function getInnerPoints( polygon, resolution ) {
 	const startY = Math.sign( _min.y ) * Math.ceil( Math.abs( _min.y / resolution ) ) * resolution;
 	const z = ( _max.z + _min.z ) * 0.5;
 	const dimension = polygon[ 0 ][ 0 ].length;
+
+	// if we know there are no iterations to be done then exit early
+	if ( startX > _max.x && startY > _max.y ) {
+
+		return [];
+
+	}
 
 	// cache a set of info to accelerate the checks for point on polygon line
 	const segmentInfo = polygon.flatMap( loop => {
@@ -82,9 +88,12 @@ function getInnerPoints( polygon, resolution ) {
 	} );
 
 	const result = [];
-	for ( let x = startX, lx = _max.x; x < lx; x += resolution ) {
+	for ( let y = startY, ly = _max.y; y < ly; y += resolution ) {
 
-		for ( let y = startY, ly = _max.y; y < ly; y += resolution ) {
+		const xScalar = mode === 'grid' ? 1 : Math.sin( Math.PI / 2 + MathUtils.DEG2RAD * y );
+		const xStride = resolution / xScalar;
+		const startX = Math.sign( _min.x ) * Math.ceil( Math.abs( _min.x / xStride ) ) * xStride;
+		for ( let x = startX, lx = _max.x; x < lx; x += resolution / xScalar ) {
 
 			if ( ! isPointOnPolygonEdge( segmentInfo, x, y ) ) {
 
@@ -147,11 +156,13 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 		let innerPoints = [];
 		if ( resolution !== null ) {
 
-			innerPoints = useEarcut ? [] : getInnerPoints( polygon, resolution );
+			const resampleMode = ellipsoid ? 'ellipsoid' : 'grid';
+
+			innerPoints = useEarcut ? [] : getInnerPoints( polygon, resolution, resampleMode );
 
 			polygon = polygon.map( loop => {
 
-				return resampleLine( loop, resolution );
+				return resampleLine( loop, resolution, resampleMode );
 
 			} );
 
