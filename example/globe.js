@@ -57,7 +57,7 @@ new GeoJSONLoader()
 		const queryParams = new URLSearchParams( location.search );
 		const country = queryParams.get( 'country' ) || 'Japan';
 		let thickness = parseFloat( queryParams.get( 'thickness' ) );
-		let resolution = parseFloat( queryParams.get( 'resolution' ) ) || 5;
+		let resolution = parseFloat( queryParams.get( 'resolution' ) ) || 2.5;
 		if ( thickness !== 0 ) {
 
 			thickness = thickness || ( 1e5 * 0.5 );
