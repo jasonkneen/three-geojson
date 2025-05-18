@@ -116,8 +116,8 @@ export function resampleLine( loop, minDistance, mode = 'grid' ) {
 			const yDist = minDistance;
 			const xDist = minDistance / Math.sin( Math.PI / 2 + MathUtils.DEG2RAD * midy );
 
-			const ySteps = dy / yDist;
-			const xSteps = dx / xDist;
+			const ySteps = Math.abs( dy / yDist );
+			const xSteps = Math.abs( dx / xDist );
 
 			steps = Math.ceil( Math.max( xSteps, ySteps ) );
 
