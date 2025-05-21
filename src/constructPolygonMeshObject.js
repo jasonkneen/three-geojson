@@ -4,11 +4,11 @@ import { resampleLine } from './GeoJSONShapeUtils.js';
 import { getLoopEdges, triangulate } from './triangulate.js';
 import { getCenter, offsetPoints, transformToEllipsoid } from './FlatVertexBufferUtils.js';
 
-const _vec = new /* @__PURE__ */ Vector3();
-const _dir1 = new /* @__PURE__ */ Vector3();
-const _dir2 = new /* @__PURE__ */ Vector3();
-const _min = new /* @__PURE__ */ Vector3();
-const _max = new /* @__PURE__ */ Vector3();
+const _vec = /* @__PURE__ */ new Vector3();
+const _dir1 = /* @__PURE__ */ new Vector3();
+const _dir2 = /* @__PURE__ */ new Vector3();
+const _min = /* @__PURE__ */ new Vector3();
+const _max = /* @__PURE__ */ new Vector3();
 
 // takes set of segment info from below and checks if a polygon lies on any of the segments
 function isPointOnPolygonEdge( segmentInfo, x, y ) {
