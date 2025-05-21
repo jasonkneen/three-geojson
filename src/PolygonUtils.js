@@ -2,9 +2,9 @@ import { Vector3 } from 'three';
 import { unkinkPolygon } from '@turf/unkink-polygon';
 import { dedupeCoordinates, isClockWise, isPointInPolygon } from './GeoJSONShapeUtils.js';
 
-const _min = new /* @__PURE__ */ Vector3();
-const _max = new /* @__PURE__ */ Vector3();
-const _center = new /* @__PURE__ */ Vector3();
+const _min = /* @__PURE__ */ new Vector3();
+const _max = /* @__PURE__ */ new Vector3();
+const _center = /* @__PURE__ */ new Vector3();
 
 function fixLoop( loop ) {
 

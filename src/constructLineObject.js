@@ -2,7 +2,7 @@ import { BufferAttribute, LineSegments, Vector3 } from 'three';
 import { getCenter, offsetPoints, transformToEllipsoid } from './FlatVertexBufferUtils.js';
 import { resampleLine } from './GeoJSONShapeUtils.js';
 
-const _vec = new /* @__PURE__ */ Vector3();
+const _vec = /* @__PURE__ */ new Vector3();
 
 // Takes a set of vertex data and constructs a line segment
 export function constructLineObject( lineStrings, options = {} ) {
