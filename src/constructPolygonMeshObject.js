@@ -1,4 +1,4 @@
-import { BufferAttribute, Controls, MathUtils, Mesh, ShapeUtils, Vector2, Vector3 } from 'three';
+import { BufferAttribute, MathUtils, Mesh, ShapeUtils, Vector2, Vector3 } from 'three';
 import { correctPolygonWinding, dedupePolygonPoints, getPolygonBounds, splitPolygon } from './PolygonUtils.js';
 import { resampleLine } from './GeoJSONShapeUtils.js';
 import { getLoopEdges, triangulate } from './triangulate.js';
@@ -131,6 +131,7 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 		ellipsoid = null,
 		resolution = null,
 		detectSelfIntersection = true,
+		altitudeScale = 1,
 		useEarcut = false,
 	} = options;
 
@@ -280,7 +281,7 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 			const z = flat ? 0 : ( point[ 2 ] || 0 );
 			posArray[ indexOffset + 0 ] = point[ 0 ];
 			posArray[ indexOffset + 1 ] = point[ 1 ];
-			posArray[ indexOffset + 2 ] = z + zOffset;
+			posArray[ indexOffset + 2 ] = z * altitudeScale + zOffset;
 
 		}
 

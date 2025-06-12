@@ -139,6 +139,10 @@ Descriptions of the options used in the `getLineObject` and `getMeshObject` func
   // The offset of the generated geometry on the z axis.
   offset = 0: number,
 
+	// A value to scale the embedded geojson-embedded altitude values by. The offset
+	// option value is not multiplied by this.
+	altitudeScale = 1: number,
+
   // If "true" then any altitude or z-values are ignored.
   flat = false: boolean,
 
@@ -167,7 +171,7 @@ Additonal polygon "getMeshObject" options:
   useEarcut = false: boolean,
 
   // Whether to perform self polygon intersection checks and split polygons at intersections.
-  // Can be disabled when a data set is known to be well-formed to improve performance. 
+  // Can be disabled when a data set is known to be well-formed to improve performance.
   detectSelfIntersection = true: boolean,
 }
 ```

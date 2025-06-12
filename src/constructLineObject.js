@@ -12,6 +12,7 @@ export function constructLineObject( lineStrings, options = {} ) {
 		offset = 0,
 		ellipsoid = null,
 		resolution = null,
+		altitudeScale = 1,
 	} = options;
 
 	// resample the polygon edge
@@ -49,11 +50,11 @@ export function constructLineObject( lineStrings, options = {} ) {
 			const v1 = vertices[ ni ];
 			posArray[ index + 0 ] = v0[ 0 ];
 			posArray[ index + 1 ] = v0[ 1 ];
-			posArray[ index + 2 ] = ( flat ? 0 : v0[ 2 ] || 0 ) + offset;
+			posArray[ index + 2 ] = ( flat ? 0 : v0[ 2 ] || 0 ) * altitudeScale + offset;
 
 			posArray[ index + 3 ] = v1[ 0 ];
 			posArray[ index + 4 ] = v1[ 1 ];
-			posArray[ index + 5 ] = ( flat ? 0 : v1[ 2 ] || 0 ) + offset;
+			posArray[ index + 5 ] = ( flat ? 0 : v1[ 2 ] || 0 ) * altitudeScale + offset;
 
 			index += 6;
 
