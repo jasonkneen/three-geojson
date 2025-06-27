@@ -18,7 +18,7 @@ function getBase( object ) {
 // Shape construction functions
 function getLineObject( options = {} ) {
 
-	return constructLineObject( this.data.flatMap( line => line ), options );
+	return constructLineObject( this.data, options );
 
 
 }
