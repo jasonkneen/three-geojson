@@ -133,6 +133,7 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 		detectSelfIntersection = true,
 		altitudeScale = 1,
 		useEarcut = false,
+		groups = null,
 	} = options;
 
 	// clone, clean up, filter, and ensure winding order of the polygon shapes,
@@ -213,10 +214,15 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 	// collect the points
 	let capVertices = 0;
 	let edgeVertices = 0;
+	const groupCapVertices = [];
+	const groupEdgeVertices = [];
 	triangulations.forEach( ( { indices, edges } ) => {
 
 		capVertices += indices.length;
 		edgeVertices += edges.length * 2 * 3;
+
+		groupCapVertices.push( indices.length );
+		groupEdgeVertices.push( edges.length * 2 * 3 );
 
 	} );
 
@@ -360,10 +366,79 @@ export function constructPolygonMeshObject( polygons, options = {} ) {
 	mesh.geometry.setAttribute( 'position', new BufferAttribute( new Float32Array( posArray ), 3, false ) );
 	mesh.geometry.setAttribute( 'normal', new BufferAttribute( normalArray, 3, false ) );
 
-	// add groups in a top, bottom, sides order
-	mesh.geometry.addGroup( 0, capVertices, 0 );
-	if ( thickness > 0 ) {
+	if ( groups ) {
 
+		let offset = 0;
+		let materialIndex = 0;
+
+		// add first cap
+		let stack = [ ...groups ];
+		let vertexCounts = [ ...groupCapVertices ];
+		while ( stack.length ) {
+
+			let count = stack.shift() || 0;
+			let vertexCount = 0;
+			while ( count !== 0 ) {
+
+				vertexCount += vertexCounts.shift() || 0;
+				count --;
+
+			}
+
+			mesh.geometry.addGroup( offset, vertexCount, materialIndex );
+			materialIndex ++;
+			offset += vertexCount;
+
+		}
+
+		if ( thickness > 0 ) {
+
+			// add second cap
+			stack = [ ...groups ];
+			vertexCounts = [ ...groupCapVertices ];
+			while ( stack.length ) {
+
+				let count = stack.shift() || 0;
+				let vertexCount = 0;
+				while ( count !== 0 ) {
+
+					vertexCount += vertexCounts.shift() || 0;
+					count --;
+
+				}
+
+				mesh.geometry.addGroup( offset, vertexCount, materialIndex );
+				materialIndex ++;
+				offset += vertexCount;
+
+			}
+
+			// add edge vertices
+			stack = [ ...groups ];
+			vertexCounts = [ ...groupEdgeVertices ];
+			while ( stack.length ) {
+
+				let count = stack.shift() || 0;
+				let vertexCount = 0;
+				while ( count !== 0 ) {
+
+					vertexCount += vertexCounts.shift() || 0;
+					count --;
+
+				}
+
+				mesh.geometry.addGroup( offset, vertexCount, materialIndex );
+				materialIndex ++;
+				offset += vertexCount;
+
+			}
+
+		}
+
+	} else if ( thickness > 0 ) {
+
+		// add groups in a top, bottom, sides order
+		mesh.geometry.addGroup( 0, capVertices, 0 );
 		mesh.geometry.addGroup( capVertices, capVertices, 1 );
 		mesh.geometry.addGroup( capVertices * 2, edgeVertices, 2 );
 

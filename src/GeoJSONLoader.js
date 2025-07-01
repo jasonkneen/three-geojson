@@ -38,6 +38,60 @@ function getPolygonMeshObject( options ) {
 // Parser for GeoJSON https://geojson.org/
 export class GeoJSONLoader {
 
+	// Construct a merged geometry of all lines
+	static getLineObject( objects, options ) {
+
+		const lines = [];
+		const groups = [];
+		objects.forEach( o => {
+
+			if ( /LineString/.test( o.type ) ) {
+
+				lines.push( ...o.data );
+				groups.push( o.data.length );
+
+			} else if ( /Polygon/.test( o.type ) ) {
+
+				const shapes = o.data.flatMap( shape => shape );
+				lines.push( ...shapes );
+				groups.push( shapes.length );
+
+			}
+
+		} );
+
+		return constructLineObject( lines, {
+			...options,
+			groups: [],
+	 	} );
+
+	}
+
+	// Construct a merged geometry of all shapes
+	static getMeshObject( objects, options ) {
+
+		// TODO: support cap / edges group generation. Requires groups caps and edges for each individual geometry together
+		const polygons = [];
+		const groups = [];
+		objects.forEach( o => {
+
+			if ( /Polygon/.test( o.type ) ) {
+
+				const shapes = o.data;
+				polygons.push( ...shapes );
+				groups.push( shapes.length );
+
+			}
+
+		} );
+
+		return constructPolygonMeshObject( polygons, {
+			...options,
+			groups,
+	 	} );
+
+	}
+
 	constructor() {
 
 		this.fetchOptions = {};

@@ -202,6 +202,22 @@ parse( content: string | object ): GeoJSONResult
 
 Parses geojson content. Takes a raw or stringified json object.
 
+### static constructMeshObject
+
+```js
+static constructMeshObject( objects: Array<Polygon>, options: Object ): Mesh
+```
+
+Returns a mesh that merges the result of all the provided Polygons. Each result is defined as a separate group in the resulting geometry in top cap, bottom cap, side geometry order.
+
+### static constructLineObject
+
+```js
+static constructLineObject( objects: Array<Polygon|LineString>, options: Object ): LineSegments
+```
+
+Returns a line that merges the result of all the provided Polygons and LineStrings. Each result is defined as a separate group in the resulting geometry.
+
 ## WKTLoader
 
 _extends GeoJSONLoader_

@@ -13,6 +13,7 @@ export function constructLineObject( lineStrings, options = {} ) {
 		ellipsoid = null,
 		resolution = null,
 		altitudeScale = 1,
+		groups = null,
 	} = options;
 
 	// resample the polygon edge
@@ -38,6 +39,7 @@ export function constructLineObject( lineStrings, options = {} ) {
 	// roll up all the vertices
 	let index = 0;
 	const posArray = new Array( totalSegments * 3 );
+	const vertexCounts = [];
 	lineStrings.forEach( vertices => {
 
 		const length = vertices.length;
@@ -60,6 +62,8 @@ export function constructLineObject( lineStrings, options = {} ) {
 
 		}
 
+		vertexCounts.push( segments * 2 );
+
 	} );
 
 	// transform the points to the ellipsoid
@@ -76,6 +80,30 @@ export function constructLineObject( lineStrings, options = {} ) {
 	offsetPoints( posArray, ..._vec );
 
 	line.geometry.setAttribute( 'position', new BufferAttribute( new Float32Array( posArray ), 3, false ) );
+
+	if ( groups ) {
+
+		const stack = [ ...groups ];
+		let offset = 0;
+		let materialIndex = 0;
+		while ( stack.length ) {
+
+			let count = stack.shift() || 0;
+			let vertexCount = 0;
+			while ( count !== 0 ) {
+
+				vertexCount += vertexCounts.shift() || 0;
+				count --;
+
+			}
+
+			line.geometry.addGroup( offset, vertexCount, materialIndex );
+			materialIndex ++;
+			offset += vertexCount;
+
+		}
+
+	}
 
 	return line;
 
