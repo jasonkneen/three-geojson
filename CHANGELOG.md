@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.0.12] - 2025-07.01
+## Added
+- static GeoJSONLoader.getMeshObject and getLineObject functions.
+
 ## [0.0.11] - 2025.06.27
 ### Fixed
 - Fixed "LineStrings" geometry not being generated correctly.
