@@ -60,3 +60,5 @@ result.polygons.forEach( polygon => {
 # API
 
 See [API.md](./API.md) for full API documentation.
+
+The same documentation is also available on the [docs site](https://gkjohnson.github.io/tools/docs/three-geojson/).
